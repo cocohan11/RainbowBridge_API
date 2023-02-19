@@ -1,5 +1,9 @@
 const dbPool = require('../util/dbPool');
+//카멜케이스로 DB컬럼값을 응답하기 위한 모듈 선언
+const camelcaseKeys = require('camelcase-keys');
 const connection = dbPool.init();
+
+
 
 let message; //응답 메세지 전역변수 선언
 
@@ -15,7 +19,7 @@ function mySQLQuery(query) {
                   return reject(err);
               } else {
                   //순차적으로 실행하면 반환되는 행을 관리
-                  return resolve(rows);
+                  return resolve(camelcaseKeys(rows));
               }
           });
       } catch (err) {
@@ -42,7 +46,7 @@ memberMng.prototype.selectMemberList = () => {
         return reject(new Error('회원조회 오류 발생 !!!'));
       } else {
         message = '회원가입에 성공했습니다.';
-        return resolve(rows, message);
+        return resolve(camelcaseKeys(rows), message);
       }
     })
   })
@@ -58,7 +62,7 @@ memberMng.prototype.selectMemberByEmail = (query) => {
         console.log(err)
         return reject(new Error('회원정보 DB 조회 오류'));
       } else {
-        return resolve(rows);
+        return resolve(camelcaseKeys(rows));
       }
     })
   })
@@ -79,31 +83,48 @@ memberMng.prototype.insertNewMember = (query) => {
         console.log(err)
         return reject(new Error('회원정보 DB 저장 오류'));
       } else {
-        return resolve(rows);
+        return resolve(rows.insertId);
       }
     })
   })
 }
 
 
-//반려견 정보와 사용자 닉네임 정보 등록
+//반려견 정보 등록
 memberMng.prototype.updateMemberInfo = (query) => {
-  const insertDogInfo = {
-    text : 'INSERT INTO DOG (dog_name, breed_type, user_id) VALUE (?, ?, ?)',
-    params : [query.dogName, query.breedType, query.userId]
-  };
+  // const insertDogInfo = {
+  //   text : 'INSERT INTO DOG (dog_name, breed_type, user_id) VALUE (?, ?, ?)',
+  //   params : [query.dogName, query.breedType, query.userId]
+  // };
 
-  const updateMemberInfo = {
-    text: 'UPDATE MEMBER SET nickname = ? WHERE user_id = ?', 
-    params : [query.nickname, query.userId]
-  }
+  // //1.26: 사용자 닉네임을 미사용으로 삭제해야함
+  // const updateMemberInfo = {
+  //   text: 'UPDATE MEMBER SET nickname = ? WHERE user_id = ?', 
+  //   params : [query.nickname, query.userId]
+  // }
 
+  // return new Promise((resolve, reject) => {
+  //   //쿼리들 순차 실행
+  //   mySQLQuery(insertDogInfo)
+  //   .then(mySQLQuery(updateMemberInfo))
+  //   .then((res) => { resolve(camelcaseKeys(res)) })
+  //   .catch((err) => { reject(new Error('Error while executing SQL Query : %o', err)) });
+  // })
+
+  const sql = 'INSERT INTO DOG (dog_name, breed_type, user_id) VALUE (?, ?, ?)';  
+  
   return new Promise((resolve, reject) => {
-    //쿼리들 순차 실행
-    mySQLQuery(insertDogInfo)
-    .then(mySQLQuery(updateMemberInfo))
-    .then((res) => { resolve(res) })
-    .catch((err) => { reject(new Error('Error while executing SQL Query : %o', err)) });
+    connection.query ( 
+      sql, 
+      [query.dogName, query.breedType, query.userId],
+      (err, rows) => {
+      if (err) {
+        console.log(err)
+        return reject(new Error('반려견 정보 DB 저장 오류'));
+      } else {
+        return resolve(rows.insertId);
+      }
+    })
   })
 
 }

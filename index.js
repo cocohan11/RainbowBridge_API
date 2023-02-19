@@ -45,6 +45,19 @@ const port = 3001;
  *  require로 해당 라우터 모듈을 가져오고, 
  *  app.use('/경로', 라우터)로 라우터 사용설정 
  * '/경로'로 해당하는 작업을 라우터가 실행한다
+ *
+ *  
+ * *라우터(router)란?
+ *  -> 한마디로, 클라에서 들어온 요청을 어떻게 핸들링하고, 응답할지 정의하는 것.
+ *  - 사전적의미: 노선.루트.도로
+ *     1) 한곳에서 다른곳으로 가기 위해 따라가는 길
+ *     2) (버스기차 수송품등) 노선 
+ *     3) (특정한 루트를 따라 무엇을)보내다(전송하다)
+ *  - 개발적의미: 라우팅은 URI 및 특정한 HTTP요청 메소드(GET, POST 등) 요청에 대해 어플에 응답하는 방법을 결정하는 것을 의미.
+ *     - express.js에선 라우트는 아래처럼 정의해서 사용한다.
+ *     - 라우트는 하나 이상의 핸들러를 갖을 수 있고, 이 함수를 라우트가 일치할때 실행한다.
+ *     -> app.METHOD(PATH, HANDLER)
+ *     -> 참고: https://expressjs.com/ko/starter/basic-routing.html
  */
 fs.readdirSync(__dirname + '/routes/').forEach(function (fileName) {
 	let routeName = fileName.substr(0, fileName.lastIndexOf('.'));
@@ -63,7 +76,7 @@ fs.readdirSync(__dirname + '/routes/').forEach(function (fileName) {
   error 미들뒈어는 인자를 4개 선언한다.
   비동기요청일 때 발생한 오류의 경우 express가 처리해주지 못한다.
   epresss는 이 경우를 위해 next 함수를 사용할 수 있다.
-
+  
  * 블로그 설명글 - https://teamdable.github.io/techblog/express-error-handling
  * express 에러핸들링 공홈설명 - https://expressjs.com/en/guide/error-handling.html
  */
