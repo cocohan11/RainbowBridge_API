@@ -34,7 +34,7 @@ function mySQLQuery(query) {
  * @returns 
  */
 memberMng.prototype.selectMemberList = () => {
-  const sql = `select * from MEMBER WHERE user_email = 'test@gmail.com';`;
+  const sql = `SELECT * FROM MEMBER WHERE user_email = 'test@gmail.com';`;
   
   return new Promise((resolve, reject) => {
     
@@ -54,7 +54,7 @@ memberMng.prototype.selectMemberList = () => {
 
 //DB에서 회원정보 SELECT
 memberMng.prototype.selectMemberByEmail = (query) => {
-  const sql = `select * from MEMBER WHERE user_email = ?`;
+  const sql = `SELECT * FROM MEMBER WHERE user_email = ?`;
   
   return new Promise((resolve, reject) => {
     connection.query(sql, [query], (err, rows) => {
@@ -97,7 +97,7 @@ memberMng.prototype.updateMemberInfo = (query) => {
   //   params : [query.dogName, query.breedType, query.userId]
   // };
 
-  // //1.26: 사용자 닉네임을 미사용으로 삭제해야함
+  // //1.26: 사용자 닉네임 미사용으로 삭제해야함
   // const updateMemberInfo = {
   //   text: 'UPDATE MEMBER SET nickname = ? WHERE user_id = ?', 
   //   params : [query.nickname, query.userId]

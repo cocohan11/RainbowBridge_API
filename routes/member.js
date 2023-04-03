@@ -37,15 +37,6 @@ router.get('/test', async (req, res) => {
 })
 
 
-//비동기로 처리 테스튼
-router.get('/test2', async (req, res) => {
-  console.log('test 2 call.....!!!!');
-  const rows = await memberMngDB.selectMemberList();
-  //성공메세지 전달
-  res.json({'result': {rows}});
-})
-
-
 /**
  * 회원정보 조회 
  * @route {GET} api/member/:email
@@ -88,6 +79,8 @@ router.post('/dog', async (req, res) => {
   console.log('rows: %o', rows);
   res.json({'result': {'message': '반려견정보 등록 완료!', 'dogId': rows}})
 })
+
+
 
 /**
  * 이용약관

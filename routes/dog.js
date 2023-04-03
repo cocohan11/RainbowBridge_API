@@ -40,6 +40,7 @@ const frontImageUploader = multer({
       
       //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
       let newFilename = `${file.originalname}.jpeg`
+      console.log(`newFilename: ${newFilename}`);
       
       //extname = 경로의 마지막 '.'에서 마지막 부분의 문자열 끝까지의 확장을 반환합니다. 
       // 경로의 마지막 부분에 '.'가 없거나 경로의 첫 번째 문자가 '.'인 경우 빈 문자열을 반환합니다.
@@ -53,7 +54,6 @@ const frontImageUploader = multer({
       }
       //원래코드
       //callback(null, `${uploadDirectory}/${Date.now()}_${file.originalname}`) 
-      //변경코드
       //업로드 기능(null, '업로드경로')
       callback(null, `${Date.now()}_${newFilename}`)
     },
@@ -148,6 +148,7 @@ router.post('/confirm/front/photo',
   console.log('클라이언트로부터 전달받은 이미지 파일값: %o', req.file);
   console.log('클라이언트로부터 전달받은 바디값: %o', req.body);
 
+  
   //클라이언트로부터 이미지 파일을 전달받는다. 
   const file = req.file;
 
@@ -171,7 +172,7 @@ router.post('/confirm/front/photo',
   req.body.path = file.location
 
   const rows = await dogMngDB.insertDogPhoto(req.body);
-  console.log(rows);
+  console.log(rows);  
   res.json({result: {'message': '이미지 업로드 처리 성공!!'}})
 })
 
@@ -214,51 +215,7 @@ router.post('/confirm/side/photo',
   console.log(rows);
   res.json({result: {'message': '이미지 업로드 처리 성공!!'}})
 })
-
-
-/**
- * 3D 모델 생성 API
- *  1) 텍스처를 입힌 3D모델을 생성하기 위한 API
- * @route {POST} /api/dog/model
- */
-router.post('/model', async (req, res) => {
-  console.log('클라이언트로부터 전달받은 바디값: %o', req.body);
-
-  //@TODO = test로 userid - 3, breedType = 1 조회
-  //클라이언트로부터 이미지 파일을 전달받는다. 
-  //const file = req.file;
-  
-  /** 
-   * @TODO 인공지능 API 요청로직 (비동기) 후 fbx 모델파일을 응답 받은 뒤, 아래로직 처리
-   * 
-   *  < 인공지능에서 응답된 3D모델 저장 >
-      1. s3에 fbx 파일 업로드 
-      2. dB member, dog 테이블에 email. userid, dogid, s3에 업로드된 model URL 업데이트  
-      3. 유저에 해당되는 3d 모델 응답처리
-  */
-
-
-  //응답예시
-  res.json({result: "https://input-photo-front.s3.ap-northeast-2.amazonaws.com/dogModel/maltise.fbx"})
-})
-
-
-
-/**
- * 3D 모델 조회 API - 사용자가 생성한 3D모델 응답
- * @route {GET} api/dog/model/email
- */
-router.get('/model/:email', async (req, res) => {
-  const email = req.params.email;
-  console.log('email 값 확인: %o', email);
-
-    /**
-     *@TODO - 모델 응답로직 
-    */
-
-  //응답예시
-  res.json({result: "https://input-photo-front.s3.ap-northeast-2.amazonaws.com/dogModel/maltise.fbx"})
-})
+s
 
 
 /**

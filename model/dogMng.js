@@ -12,9 +12,7 @@ function dogMng() {
 //반려견 앞모습, 옆모습사진 파일명, S3 파일경로 DB에 저장
 dogMng.prototype.insertDogPhoto = (query) => {
   
-  console.log('==== insertDogPhoto ====');
-  console.log(query);
-  let sql; 
+  let sql;
   if (query.type === 'front') { //앞모습 사진을 처리하는 쿼리문
     console.log('front query');
     sql = 'UPDATE DOG SET fv_filename = ?, fv_filepath = ? WHERE dog_id = ?';  
