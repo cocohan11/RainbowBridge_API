@@ -38,6 +38,25 @@ router.get('/test', async (req, res) => {
 
 
 /**
+ * 회원탈퇴 정보변경 
+ * @route {POST} api/member/leave
+ */
+router.post('/leave', async (req, res) => {
+  console.log('req.body: %o', req.body);
+
+  if (!req.body.email || !req.body.leaveReasonNum || !req.body.userId) {
+    throw new MissingParameterError('필수파라미터가 누락되어있습니다!')
+  }
+  const rows = await memberMngDB.updateMemberLeave(req.body);
+
+  message = '회원탈퇴가 성공적으로 처리 되었습니다.'
+  console.log(`rows: %o ${rows}`);
+  console.log(`message: ${message}`);
+  res.json({ result: { code: rows, message: message } }) // 성공하면 '0000'을 리턴받음
+})
+
+
+/**
  * 회원정보 조회 
  * @route {GET} api/member/:email
  * @desc 로그인에 사용

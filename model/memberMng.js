@@ -52,6 +52,37 @@ memberMng.prototype.selectMemberList = () => {
   })
 }
 
+
+// DB에서 회원탈퇴정보 UPDATE
+memberMng.prototype.updateMemberLeave = (query) => {
+  console.log('..query : %o', query);
+
+  const sql = `UPDATE MEMBER 
+                SET mem_type = 'L',
+                leave_reason_num = ?,
+                leave_at = now(),
+                leave_reason = ?
+                WHERE user_id = ? and user_email = ?`;
+  console.log('sql:', sql);
+  
+  return new Promise((resolve, reject) => {
+    connection.query ( 
+      sql, 
+      [query.leaveReasonNum, query.leaveReasonCtx, query.userId, query.email], // 탈퇴사유가 없는 요청은 query.leaveReasonCtx null이다.
+      (err, rows) => {
+      if (err) {
+        console.log(err)
+        return reject(new Error('DB에서 회원정보 UPDATE 오류'));
+      } else {
+        console.log('..rows : %o', rows);
+        return resolve('0000');
+      }
+      })
+  })
+}
+
+
+
 //DB에서 회원정보 SELECT
 memberMng.prototype.selectMemberByEmail = (query) => {
   const sql = `SELECT * FROM MEMBER WHERE user_email = ?`;
@@ -72,7 +103,7 @@ memberMng.prototype.selectMemberByEmail = (query) => {
 memberMng.prototype.insertNewMember = (query) => {
   console.log('log : %o', query);
   
-  const sql = 'INSERT INTO MEMBER (login_sns_type, mem_type, leave_cause_num, user_email, created_at) VALUES (?, \'N\', 0, ?, NOW())';
+  const sql = 'INSERT INTO MEMBER (login_sns_type, mem_type, leave_reason_num, user_email, created_at) VALUES (?, \'N\', 0, ?, NOW())';
 
   return new Promise((resolve, reject) => {
     connection.query ( 
