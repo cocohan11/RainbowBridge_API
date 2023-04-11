@@ -45,16 +45,31 @@ router.post('/leave', async (req, res) => {
   console.log('req.body: %o', req.body);
 
   if (!req.body.email || !req.body.leaveReasonNum || !req.body.userId) {
-    throw new MissingParameterError('필수파라미터가 누락되어있습니다!')
+    const message = '필수파라미터가 누락되어있습니다!'
+    return res.status(400).json({
+      result: {
+        code: '1002', message
+      }
+    })
   }
-  const rows = await memberMngDB.updateMemberLeave(req.body);
 
-  message = '회원탈퇴가 성공적으로 처리 되었습니다.'
-  console.log(`rows: %o ${rows}`);
-  console.log(`message: ${message}`);
-  res.json({ result: { code: rows, message: message } }) // 성공하면 '0000'을 리턴받음
+  const rows = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body);
+  if (rows.affectedRows == 0 && rows.changedRows == 0) { // update -> affectedRows:1, changedRows:1 // delete -> affectedRows:1
+    const message = '해당되는 회원정보가 없습니다.' // 리스트 조회시 빈값일때
+    return res.status(404).json({
+      result: {
+        code: '1005', message
+      }
+    }) 
+  }
+
+  const message = '회원탈퇴가 성공적으로 처리 되었습니다.'
+  return res.json({
+    result: {
+      code: '0000', message
+    }
+  }) 
 })
-
 
 /**
  * 회원정보 조회 

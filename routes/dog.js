@@ -215,26 +215,6 @@ router.post('/confirm/side/photo',
   console.log(rows);
   res.json({result: {'message': '이미지 업로드 처리 성공!!'}})
 })
-s
-
-
-/**
- * 3D 모델 재성성 API - 사용자가 생성한 3D모델 재생성
- * @route {DELETE} api/dog/model/email
- */
-router.delete('/model/:email', async (req, res) => {
-  const email = req.params.email;
-  console.log('email 값 확인: %o', email);
-
-  /**
-   *@TODO - 모델 삭제로직 
-   */
-
-  //응답예시
-  res.json({result: "성공적으로 삭제했습니다."})
-})
-
-
 
 
 // 버킷업로드 테스트 - 개발완료 될때까지 지우지 않고 유지할 예정
