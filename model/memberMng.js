@@ -70,20 +70,21 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
 
   // 쿼리2. 탈퇴한 사용자의 강아지사진 삭제
   const deleteDog = {
-    text : 'DELETE FROM DOfG WHERE user_id = ?;',
+    text : 'DELETE FROM DOG WHERE user_id = ?;',
     params : [query.userId]
   };
 
   return new Promise((resolve, reject) => {
     // 쿼리1 실행
     mySQLQuery(updateMemberInfo)
-    .then(() => {
+    .then((res) => { // res:mySQLQuery의 결과
+      console.log('..q1 res : %o', res); // affectedRows:1, changedRows:1
       // 쿼리2 실행
-      return mySQLQuery(deleteDog); // 문제)두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
+      return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
                                     // 해결) return mySQLQuery(deleteDog); 추가
     })
     .then((res) => {
-      console.log('..p res : %o', res);
+      console.log('..q2 res : %o', res); // affectedRows:1, changedRows:0
       resolve(camelcaseKeys(res))
     })
     .catch((err) => {
