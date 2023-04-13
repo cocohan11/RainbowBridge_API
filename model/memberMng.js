@@ -53,7 +53,11 @@ memberMng.prototype.selectMemberList = () => {
 }
 
 
-// DB에서 회원탈퇴 + (3D반려견 사진파일 삭제 구현 예정)
+// 회원탈퇴
+// 순서
+// 1. 쿼리1) DB에서 회원탈퇴 처리
+// 2. 쿼리2) DB에서 강아지정보 삭제
+// 3. 사진파일 삭제
 memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
   console.log('..query : %o', query);
 
@@ -68,36 +72,29 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
     params : [query.leaveReasonNum, query.leaveReasonCtx, query.userId, query.email] // 탈퇴사유가 없는 요청은 query.leaveReasonCtx null이다.
   }
 
-  // 쿼리2. 탈퇴한 사용자의 강아지사진 삭제
+  // 쿼리2. DB에서 탈퇴한 사용자의 강아지사진에 대한 정보삭제
   const deleteDog = {
-    text : 'DELETE FROM DOG WHERE user_id = ?;',
-    params : [query.userId]
+    text: `SELECT fv_filename, sv_filename FROM DOG WHERE user_id = ?; 
+           DELETE FROM DOG WHERE user_id = ?;`,
+    params : [query.userId, query.userId]
   };
 
   return new Promise((resolve, reject) => {
     // 쿼리1 실행
     mySQLQuery(updateMemberInfo)
-    .then((res) => { // res:mySQLQuery의 결과
-      console.log('..q1 res : %o', res); // affectedRows:1, changedRows:1
+    .then((res1) => { // res:mySQLQuery의 결과
+      console.log('res1 : %o', res1); 
       // 쿼리2 실행
       return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
                                     // 해결) return mySQLQuery(deleteDog); 추가
     })
-    .then((res) => {
-      console.log('..q2 res : %o', res); // affectedRows:1, changedRows:0
-      resolve(camelcaseKeys(res))
+    .then((res2) => {
+      console.log('res2[0] : %o', res2[0]); // {fvFilename, svFilename}
+      return resolve(res2[0]);
     })
     .catch((err) => {
-      console.log('...err:'+err)
-      const message = 'Error while executing SQL Query: ' + err.message;
-      // 수정예정 
-      reject(new Error(JSON.stringify({ // Error 객체는 문자열만을 속성으로 가짐
-        "result": {
-          "code": "9999",
-          "message": message
-        }
-      })));
-      
+      console.log('err:'+err)
+      return reject(false); 
     });
   });
 }

@@ -2,7 +2,18 @@
 const express = require('express');
 const router = express.Router();
 const memberMngDB = require('../model/memberMng');
+const dogMngDB = require('../model/dogMng');
+const config = require('../config/config');
+const AWS = require('aws-sdk');
+let s3 = new AWS.S3();
 let message;
+
+// AWS 접근키 설정
+AWS.config.update({
+  region: config.region,
+  accessKeyId: config.accessKeyId,
+  secretAccessKey: config.secretAccessKey
+});
 
 /**
  * 공통에러 핸들링
@@ -36,7 +47,6 @@ router.get('/test', async (req, res) => {
   })
 })
 
-
 /**
  * 회원탈퇴 정보변경 
  * @route {POST} api/member/leave
@@ -44,6 +54,7 @@ router.get('/test', async (req, res) => {
 router.post('/leave', async (req, res) => {
   console.log('req.body: %o', req.body);
 
+  // 파라미터값 누락 확인
   if (!req.body.email || !req.body.leaveReasonNum || !req.body.userId) {
     const message = '필수파라미터가 누락되어있습니다!'
     return res.status(400).json({
@@ -53,20 +64,36 @@ router.post('/leave', async (req, res) => {
     })
   }
 
+  // 삭제할 사진이름 알아내기
   const rows = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body);
-  if (rows.affectedRows == 0 && rows.changedRows == 0) { // update -> affectedRows:1, changedRows:1 // delete -> affectedRows:1
-    const message = '해당되는 회원정보가 없습니다.' // 리스트 조회시 빈값일때
+  console.log('~~rows: %o', rows); // err -> rows:false
+  console.log('~~rows[0]: %o', rows[0]); // rows[0]:{ fvFilename: 'start.png', svFilename: 'text.jpg' } 
+  if (!rows) { 
+    const message = '해당되는 정보가 없습니다.' // 리스트 조회시 빈값일때
     return res.status(404).json({
       result: {
         code: '1005', message
       }
     }) 
-  }
+  } 
 
-  const message = '회원탈퇴가 성공적으로 처리 되었습니다.'
+  console.log('S3에서 사진 삭제하기');
+  const data = await dogMngDB.deleteDogImage(s3, rows[0].fvFilename, rows[0].svFilename); 
+  console.log('deleteDogImage data:', data); 
+  if (data) { // 파일 삭제가 성공했다면
+    const message = '회원탈퇴가 성공적으로 처리 되었습니다.' // 최종 성공시 보이는 문구
+    return res.status(200).json({
+      result: {
+        code: '0000', message: message
+      }
+    });
+  } 
+
+  console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
+  message = '회원탈퇴에 실패하였습니다. '
   return res.json({
     result: {
-      code: '0000', message
+      code: '9999', message : message
     }
   }) 
 })
@@ -79,6 +106,7 @@ router.post('/leave', async (req, res) => {
 router.get('/:email', async (req, res) => {
   const email = req.params.email;
   const rows = await memberMngDB.selectMemberByEmail(email);
+  console.log('rows[0]: %o', rows[0]);
   if (!rows[0]) {
     res.json({result: {'message': '해당되는 회원정보가 없습니다.'}})
   } else {

@@ -1,7 +1,7 @@
 /** 반려견모델생성 처리관련 API */
 const express = require('express');
 // multipart/form-data 를 다루기 위한 node.js 의 미들웨어
-const multer = require('multer');
+const multer = require('multer'); // 이미지, 동영상 등을 비롯한 여러 가지 파일들을 멀티파트 형식으로 업로드할 때 사용하는 미들웨어
 const multerS3  = require('multer-s3')
 const router = express.Router();
 const dogMngDB = require('../model/dogMng');
@@ -143,7 +143,8 @@ const sideImageUploader = multer({
  * @route {POST} api/dog/confirm/front/photo
  */
 router.post('/confirm/front/photo', 
-  frontImageUploader.single('photo'),
+  frontImageUploader.single('photo'), // 얘가먼저 실행됨.
+                                      // 사용자가 전송한 데이터에 파일이 포함되어 있다면 가공해서 req객체에 file이라는 프로포티를 약속하는 함수 
   async (req, res) => {
   console.log('클라이언트로부터 전달받은 이미지 파일값: %o', req.file);
   console.log('클라이언트로부터 전달받은 바디값: %o', req.body);
