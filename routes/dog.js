@@ -216,7 +216,6 @@ router.delete('/model/:email', async (req, res) => {
 
 
 
-
 // 버킷업로드 테스트 - 개발완료 될때까지 지우지 않고 유지할 예정
 router.post('/test/photo', 
   sideImageUploader.single('photo'),

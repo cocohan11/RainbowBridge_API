@@ -53,34 +53,54 @@ memberMng.prototype.selectMemberList = () => {
 }
 
 
-// DB에서 회원탈퇴정보 UPDATE
-memberMng.prototype.updateMemberLeave = (query) => {
+// DB에서 회원탈퇴 + (3D반려견 사진파일 삭제 구현 예정)
+memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
   console.log('..query : %o', query);
 
-  const sql = `UPDATE MEMBER 
-                SET mem_type = 'L',
-                leave_reason_num = ?,
-                leave_at = now(),
-                leave_reason = ?
-                WHERE user_id = ? and user_email = ?`;
-  console.log('sql:', sql);
-  
-  return new Promise((resolve, reject) => {
-    connection.query ( 
-      sql, 
-      [query.leaveReasonNum, query.leaveReasonCtx, query.userId, query.email], // 탈퇴사유가 없는 요청은 query.leaveReasonCtx null이다.
-      (err, rows) => {
-      if (err) {
-        console.log(err)
-        return reject(new Error('DB에서 회원정보 UPDATE 오류'));
-      } else {
-        console.log('..rows : %o', rows);
-        return resolve('0000');
-      }
-      })
-  })
-}
+  // 쿼리1. 회원탈퇴 처리
+  const updateMemberInfo = {
+    text: `UPDATE MEMBER 
+            SET mem_type = 'L',
+            leave_reason_num = ?,
+            leave_at = now(),
+            leave_reason = ?
+            WHERE user_id = ? and user_email = ?`, 
+    params : [query.leaveReasonNum, query.leaveReasonCtx, query.userId, query.email] // 탈퇴사유가 없는 요청은 query.leaveReasonCtx null이다.
+  }
 
+  // 쿼리2. 탈퇴한 사용자의 강아지사진 삭제
+  const deleteDog = {
+    text : 'DELETE FROM DOG WHERE user_id = ?;',
+    params : [query.userId]
+  };
+
+  return new Promise((resolve, reject) => {
+    // 쿼리1 실행
+    mySQLQuery(updateMemberInfo)
+    .then((res) => { // res:mySQLQuery의 결과
+      console.log('..q1 res : %o', res); // affectedRows:1, changedRows:1
+      // 쿼리2 실행
+      return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
+                                    // 해결) return mySQLQuery(deleteDog); 추가
+    })
+    .then((res) => {
+      console.log('..q2 res : %o', res); // affectedRows:1, changedRows:0
+      resolve(camelcaseKeys(res))
+    })
+    .catch((err) => {
+      console.log('...err:'+err)
+      const message = 'Error while executing SQL Query: ' + err.message;
+      // 수정예정 
+      reject(new Error(JSON.stringify({ // Error 객체는 문자열만을 속성으로 가짐
+        "result": {
+          "code": "9999",
+          "message": message
+        }
+      })));
+      
+    });
+  });
+}
 
 
 //DB에서 회원정보 SELECT
