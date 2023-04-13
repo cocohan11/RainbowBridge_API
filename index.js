@@ -20,6 +20,11 @@ const cors = require('cors');
 // POST요청시 들어오는 BODY를 처리하기 위해 body-parser 설정
 const bodyParser = require('body-parser');
 
+//.env라는 파일에 정보를 저장하고, 그 안의 정보를 환경변수로 등록해주는 모듈
+const dotenv = require('dotenv');
+dotenv.config(); // .env 파일을 읽어온다.
+
+
 //에러핸들링을 위한 구문. Error로부터 상속된 예외 클래스 선언
 class BadRequestError extends Error {}
 class MissingParameterError extends Error {}
@@ -86,8 +91,12 @@ app.use((err, req, res, next) => {
     res.status(400);
     res.json({message: err.message});
   } else if (err instanceof MissingParameterError) { 
+    console.log('test!!!!');
     res.status(401);
-    res.json({message: err.message});
+    //'1002
+    //필수파라미터 누락 오류
+    //res.json({message: err.message});
+    res.json({result: {'code': '1002', 'message': '필수파라미터 누락 오류'}});
   } else {
     res.status(500);
     res.json({message: err.message});

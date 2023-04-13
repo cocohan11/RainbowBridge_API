@@ -14,11 +14,11 @@ dogMng.prototype.insertDogPhoto = (query) => {
   
   let sql;
   if (query.type === 'front') { //앞모습 사진을 처리하는 쿼리문
-    console.log('front query');
     sql = 'UPDATE DOG SET fv_filename = ?, fv_filepath = ? WHERE dog_id = ?';  
   } else { //옆모습 사진을 처리하는 쿼리문
     sql = 'UPDATE DOG SET sv_filename = ?, sv_filepath = ? WHERE dog_id = ?';  
   }
+
 
   return new Promise((resolve, reject) => {
     connection.query ( 
@@ -26,8 +26,14 @@ dogMng.prototype.insertDogPhoto = (query) => {
       [query.filename, query.path, query.dogId],
       (err, rows) => {
       if (err) {
-        console.log(err)
-        return reject(new Error('반려견 사진 정보 DB 저장 오류'));
+        console.error('...err:'+err)
+        const message = 'Error while executing SQL Query: ' + err.message;
+        return reject(new Error(JSON.stringify({ // Error 객체는 문자열만을 속성으로 가짐
+          'result': {
+            'code': '9999',
+            'message': message
+          }
+        })))  
       } else {
         return resolve(rows);
       }
