@@ -1,4 +1,5 @@
 const dbPool = require('../util/dbPool');
+const memberMng = require('./memberMng');
 //카멜케이스로 DB컬럼값을 응답하기 위한 모듈 선언
 const camelcaseKeys = require('camelcase-keys');
 const connection = dbPool.init();
@@ -8,17 +9,64 @@ let message; //응답 메세지 전역변수 선언
 function dogMng() {
 }
 
+// DB에서 반려견정보 DELETE
+dogMng.prototype.deleteDogForRemake = (userId) => { 
+  // console.log('..s3 : %o', s3);
+  console.log('..userId : ', userId);
+
+  const selectDog = { // S3에 저장된 파일을 삭제하기위해 파일명 알아내기
+    text: `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename 
+            FROM DOG WHERE user_id = ?;`,
+    params : userId
+  };
+  const updateDogInfo = { // 강아지 정보를 아예 삭제하는게 아니라 사진만 비워준다. 
+    text: `UPDATE DOG SET 
+            fv_filename = null,
+            sv_filename = null,
+            fv_txt_filename = null,
+            sv_txt_filename = null
+           WHERE user_id = ?`, 
+    params : userId
+  }
+
+  return new Promise((resolve, reject) => {
+    let result1 = '';
+
+    memberMng.mySQLQuery(selectDog) // 쿼리1 실행
+    .then((res1) => { 
+      result1 = res1;
+      console.log('result1 : %o', result1); // {fvFilename, svFilename, fv_txt_filename, sv_txt_filename}
+      return memberMng.mySQLQuery(updateDogInfo); // 쿼리2 실행
+    })
+    .then((res2) => {
+      // console.log('res2 : %o', res2);
+      return resolve(result1);
+    })
+    .catch((err) => {
+      console.log('err:'+err)
+      return reject(false); 
+    });
+  });
+}
+
+
 // 반려견 사진 4장 유무조회와 삭제하기 (일반 앞, 일반 옆, 텍스처 앞, 텍스처 옆) 
 dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리스트
   console.log('deleteDogImage() 입장');
 
   // 버킷 정보
+  const item = list[0];
+  if (item.fvFilename === null || item.svFilename === null || item.fvTxtFilename === null || item.svTxtFilename === null) {
+    return 1005; // 응답코드
+  }
   let bucketPathList = [];
   bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${list[0].fvFilename}` })
   bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${list[0].svFilename}` })
   bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `front/${list[0].fvTxtFilename}` })
   bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${list[0].svTxtFilename}` })
-  console.log('bucketPathList: %o', bucketPathList);
+
+
+
 
 
   return Promise.all([ // Promise.all:비동기. 모든 함수의 결과를 기다린 후 하나의 프로미스 객체를 반환
@@ -29,12 +77,12 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
     console.log('반려견 사진삭제 성공');
     console.log('res1:', res1);
     console.log('res2: %o', res2);
-    return true; 
+    return 0000; 
   })
   .catch(err => {
     console.log('반려견 사진삭제 오류');
     console.log('err:', err);
-    return false;
+    return 9999;
   });
 
 

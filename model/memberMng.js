@@ -11,7 +11,7 @@ function memberMng() {
 }
 
 //mysql구문을 순차적으로 실행하기위해 사용하는 함수
-function mySQLQuery(query) {
+memberMng.prototype.mySQLQuery = (query) => {
   return new Promise(function(resolve, reject) {
       try {
         connection.query(query.text, query.params, function(err, rows, fields) {
@@ -53,11 +53,10 @@ memberMng.prototype.selectMemberList = () => {
 }
 
 
+
 // 회원탈퇴
-// 순서
 // 1. 쿼리1) DB에서 회원탈퇴 처리
 // 2. 쿼리2) DB에서 강아지정보 삭제
-// 3. 사진파일 삭제
 memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
   console.log('..query : %o', query);
 
@@ -80,11 +79,9 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
   };
 
   return new Promise((resolve, reject) => {
-    // 쿼리1 실행
-    mySQLQuery(updateMemberInfo)
+    mySQLQuery(updateMemberInfo) // 쿼리1 실행
     .then((res1) => { // res:mySQLQuery의 결과
-      console.log('res1 : %o', res1); 
-      // 쿼리2 실행
+      console.log('res1 : %o', res1); // 쿼리2 실행
       return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
                                     // 해결) return mySQLQuery(deleteDog); 추가
     })

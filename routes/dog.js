@@ -202,18 +202,68 @@ router.post('/confirm/side/photo',
 
 /**
  * 3D 모델 재성성 API - 사용자가 생성한 3D모델 재생성
- * @route {DELETE} api/dog/model/email
+ * @route {DELETE} api/dog/model/userId
  */
-router.delete('/model/:email', async (req, res) => {
-  const email = req.params.email;
-  console.log('email 값 확인: %o', email);
+router.delete('/model/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  console.log('userId 값 확인:', userId);
+  // 파라미터값 누락 확인
+  if (!userId) {
+    const message = '필수파라미터가 누락되어있습니다!'
+    return res.status(400).json({
+      result: {
+        code: '1002', message
+      }
+    })
+  }
+  
+  // 반려견 재생성을 위해 DB에서 기존 강아지정보 삭제
+  const list = await dogMngDB.deleteDogForRemake(userId); // 삭제할 파일 이름들
+  console.log('~~list: %o', list); // err -> rows:false
+  // console.log('~~list[0]: %o', list[0]); // rows[0]:{ fvFilename: 'start.png', svFilename: 'text.jpg' } 
+  if (!list) { 
+    const message = '해당되는 정보가 없습니다.' 
+    return res.status(404).json({
+      result: {
+        code: '1005', message
+      }
+    }) 
+  } 
 
-  /**
-   *@TODO - 모델 삭제로직 
-   */
+  // S3에서 사진 삭제하기
+  const data = await dogMngDB.deleteDogImage(s3, list); 
+  console.log('S3에서 사진 삭제하기 data:', data); 
+  if (data == 0000) { // 파일 삭제 true OR false
+    const message = '성공적으로 삭제했습니다.' // 최종 성공시 보이는 문구
+    return res.status(200).json({
+      result: {
+        code: '0000', message: message
+      }
+    });
+  } else if (data == 1005) {
+    const message = '해당되는 정보가 없습니다.' 
+    return res.status(404).json({
+      result: {
+        code: '1005', message
+      }
+    })
+  } 
 
-  //응답예시
-  res.json({result: "성공적으로 삭제했습니다."})
+  console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
+  message = '기존 강아지모델 삭제에 실패했습니다.'
+  return res.json({
+    result: {
+      code: '9999', message : message
+    }
+  }) 
 })
+
+
+// 에러코드로 응답을 받기
+// 파라미터로 에러코드 넣으면 바로 json출력해주기
+function returnResponseCode() {
+  // switch? 검색해서 만들기
+  
+}
 
 module.exports = router;
