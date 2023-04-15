@@ -15,11 +15,18 @@ const AWS = require('aws-sdk');
 
 // require('dotenv').config();
 const config = require('../config/config');
+const { log } = require('console');
 
+/**
+ * 공통에러 핸들링
+ */
+class MissingParameterError extends Error {}
+class ResponseEmptyError extends Error {}
+class CommonError extends Error {}
 
-//AWS 접근키 설정
+// AWS 접근키 설정
 AWS.config.update({
-  region: config.region,
+  region: 'ap-northeast-2',
   accessKeyId: config.accessKeyId,
   secretAccessKey: config.secretAccessKey
 });
@@ -30,6 +37,13 @@ const s3 = new AWS.S3();
 const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp']
 
 
+/**
+ * 
+ * 클라이언트에서 받은 이미지를 파일로 저장하기 위해 multer 라이브러리 사용
+ * 인자값 설명
+  - multer({storage: _storage}) : storage를 설정해, 파일을 저장하게 한다
+  - single : 지정된 form 필드와 연결된 단일 파일을 처리하는 미들웨어를 반환 (req.file로 전달되는 명)
+ */
 const frontImageUploader = multer({
   storage: multerS3({
     s3: s3,
@@ -38,10 +52,8 @@ const frontImageUploader = multer({
       //업로드할 디렉토리를 설정하기 위한 코드. 없어도 무관
       //const uploadDirectory = req.query.directory ?? ''
       
-      //@Todo - 수정
       //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-      //let newFilename = `${file.originalname}.jpeg`
-      let newFilename = `${file.originalname}`
+      let newFilename = `${file.originalname}.jpeg`
       console.log(`newFilename: ${newFilename}`);
       
       //extname = 경로의 마지막 '.'에서 마지막 부분의 문자열 끝까지의 확장을 반환합니다. 
@@ -51,8 +63,13 @@ const frontImageUploader = multer({
 
       //extion을 확인하기 위한 코드로 없어도 무관함. 허용되지 않는 확장자면 에러발생됨.
       if (!allowedExtensions.includes(extenstion)) {
-        console.error('파일의 확장자가 없습니다.');
-        return callback(new Error('wrong extenstion'))
+        console.error('frontImageUploader error: 파일의 확장자가 없습니다.')
+        //23.4.13 위) next함수를 써서 에러핸들링 되도록 시도했지만 실패
+        //next란, next(err)는 현재 미들웨어에서 발생한 에러를 다음 미들웨어에 전달하는 역할
+        //next 함수를 호출해 인자로 전달되는 에러객체를 app.use에 정의한 에러핸들러의 매개변수로 전달한다
+
+        //@todo) 동작하지 않아서 수정필요
+        return callback(new CommonError('파일의 확장자가 없습니다'))
       }
 
       //원래코드
@@ -67,8 +84,6 @@ const frontImageUploader = multer({
 
 
 //옆모습 이미지 버킷 업로드 함수
-//추후 갤러리뷰 개발이 변경되면, 확장자가 불러오도록 처리가 될 수도 있어서 
-//원래 코드는 주석처리해둔 상태로 놔둠.
 const sideImageUploader = multer({
   storage: multerS3({
     s3: s3,
@@ -77,8 +92,7 @@ const sideImageUploader = multer({
       //const uploadDirectory = req.query.directory ?? '' //업로드할 디렉토리를 설정하기 위한 코드. 없어도 무관
       
       //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-      //let newFilename = `${file.originalname}.jpeg`
-      let newFilename = `${file.originalname}`
+      let newFilename = `${file.originalname}.jpeg`
       
       //extname = 경로의 마지막 '.'에서 마지막 부분의 문자열 끝까지의 확장을 반환합니다. 경로의 마지막 부분에 '.'가 없거나 경로의 첫 번째 문자가 '.'인 경우 빈 문자열을 반환합니다.
       const extenstion  = path.extname(newFilename)
@@ -100,14 +114,6 @@ const sideImageUploader = multer({
 
 
 /**
- * 
- * 클라이언트에서 받은 이미지를 파일로 저장하기 위해 multer 라이브러리 사용
- * 인자값 설명
-  - multer({storage: _storage}) : storage를 설정해, 파일을 저장하게 한다
-  - single : 지정된 form 필드와 연결된 단일 파일을 처리하는 미들웨어를 반환 (req.file로 전달되는 명)
- */
-
-/**
  * 반려견 앞모습 인풋사진 저장 API
  *  1) AWS S3에 반려견 인풋사진 업로드
  *  2) DB에 S3 저장경로와 파일명 저장
@@ -116,10 +122,7 @@ const sideImageUploader = multer({
 router.post('/confirm/front/photo', 
   frontImageUploader.single('facePhoto'),
   async (req, res) => {
-  console.log('클라이언트로부터 전달받은 이미지 파일값: %o', req.file);
-  console.log('클라이언트로부터 전달받은 바디값: %o', req.body);
   
-  //req.file = null //테스트하던 중이었음
   if (!req.file || !req.body.dogId || !req.body.type) {
     return res.status(400).json({ 
       result: {
@@ -162,8 +165,6 @@ router.post('/confirm/front/photo',
 router.post('/confirm/side/photo', 
   sideImageUploader.single('bodyPhoto'),
   async (req, res) => {
-  console.log('클라이언트로부터 전달받은 이미지 파일값: %o', req.file);
-  console.log('클라이언트로부터 전달받은 바디값: %o', req.body);
   
   if (!req.file || !req.body.dogId || !req.body.type) {
     return res.status(400).json({
@@ -213,44 +214,5 @@ router.delete('/model/:email', async (req, res) => {
   //응답예시
   res.json({result: "성공적으로 삭제했습니다."})
 })
-
-
-
-// 버킷업로드 테스트 - 개발완료 될때까지 지우지 않고 유지할 예정
-router.post('/test/photo', 
-  sideImageUploader.single('photo'),
-  async (req, res) => {
-  console.log('클라이언트로부터 전달받은 이미지 파일값: %o', req.file);
-  console.log('클라이언트로부터 전달받은 바디값: %o', req.body);
-
-  //클라이언트로부터 이미지 파일을 전달받는다. 
-  const file = req.file;
-
-  //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-  let newFilename = `${file.originalname}.jpeg`
-
-  let originalName = '';
-  let fileName = '';
-  let mimeType = '';
-  let size = 0;
-
-  if(file){
-    originalName = file.originalname;
-    fileName = file.filename;
-    mimeType = file.mimetype;
-    size = file.size;
-  } 
-  
-  //DB에 파일명과 S3 파일 저장경로 저장
-  req.body.filename = newFilename
-  req.body.path = file.location
-
-  //const rows = await dogMngDB.insertDogPhoto(req.body);
-  //console.log(rows);
-  res.json({result: {'message': '이미지 업로드 처리 성공!!'}})
-})
-
-
-
 
 module.exports = router;

@@ -22,13 +22,14 @@ const bodyParser = require('body-parser');
 
 //.env라는 파일에 정보를 저장하고, 그 안의 정보를 환경변수로 등록해주는 모듈
 const dotenv = require('dotenv');
+const { log } = require('console');
 dotenv.config(); // .env 파일을 읽어온다.
 
 
 //에러핸들링을 위한 구문. Error로부터 상속된 예외 클래스 선언
-class BadRequestError extends Error {}
 class MissingParameterError extends Error {}
-
+class ResponseEmptyError extends Error {}
+class CommonError extends Error {}
 
 // Add cors
 app.use(cors());
@@ -87,19 +88,15 @@ fs.readdirSync(__dirname + '/routes/').forEach(function (fileName) {
  */
 app.use((err, req, res, next) => {
 
-  if (err instanceof BadRequestError) { // API요청시 발생한 오류가 BadRequestError인 경우 오류처리
-    res.status(400);
-    res.json({message: err.message});
-  } else if (err instanceof MissingParameterError) { 
-    console.log('test!!!!');
+  if (err instanceof MissingParameterError) { 
     res.status(401);
-    //'1002
-    //필수파라미터 누락 오류
-    //res.json({message: err.message});
-    res.json({result: {'code': '1002', 'message': '필수파라미터 누락 오류'}});
-  } else {
+    res.json({result: {code: '1002', message: '필수파라미터 누락 오류'}});
+  } else if (err instanceof ResponseEmptyError) {
+    res.status(200);
+    res.json({result: {code: '1005', message: '결과가 빈값입니다'}});
+  } else if (err instanceof CommonError) {
     res.status(500);
-    res.json({message: err.message});
+    res.json({result: {code: '9999', message: err.message}});
   }
 });
 

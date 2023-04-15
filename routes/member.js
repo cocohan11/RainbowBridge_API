@@ -6,10 +6,11 @@ let message;
 
 /**
  * 공통에러 핸들링
- * 
  */
-class BadRequestError extends Error {}
 class MissingParameterError extends Error {}
+class ResponseEmptyError extends Error {}
+class CommonError extends Error {}
+
 
 //성공 (200, 304)
 //실패 (404, 500) 공통 응답처리
