@@ -140,10 +140,6 @@ dogMng.prototype.insertDogPhoto = (query) => {
 
 //텍스처가 입혀진 3D모델 생성을 위해 이미지 파일 URL,후처리된 3D model URL 조회
 dogMng.prototype.selectDogInfo = (query) => {
-
-  console.log('==== selectDogInfo ====');
-  console.log(query);
-  
   const sql = `SELECT d.fv_filepath, d.sv_filepath, b.model_filepath
               FROM DOG d, DOG_BREED b
             WHERE d.user_id = ? AND b.breed_id = ?;`;
