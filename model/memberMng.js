@@ -73,8 +73,8 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
   }
 
   // 쿼리2. DB에서 탈퇴한 사용자의 강아지사진에 대한 정보삭제
-  const deleteDog = {
-    text: `SELECT fv_filename, sv_filename FROM DOG WHERE user_id = ?; 
+  const deleteDog = { 
+    text: `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename FROM DOG WHERE user_id = ?; 
            DELETE FROM DOG WHERE user_id = ?;`,
     params : [query.userId, query.userId]
   };

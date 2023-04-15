@@ -64,11 +64,11 @@ router.post('/leave', async (req, res) => {
     })
   }
 
-  // 삭제할 사진이름 알아내기
-  const rows = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body);
-  console.log('~~rows: %o', rows); // err -> rows:false
-  console.log('~~rows[0]: %o', rows[0]); // rows[0]:{ fvFilename: 'start.png', svFilename: 'text.jpg' } 
-  if (!rows) { 
+  // DB에서 회원정보 UPDATE, 강아지정보 DELETE
+  const list = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body); // 삭제할 사진이름 알아내기
+  console.log('~~list: %o', list); // err -> rows:false
+  console.log('~~list[0]: %o', list[0]); // rows[0]:{ fvFilename: 'start.png', svFilename: 'text.jpg' } 
+  if (!list) { 
     const message = '해당되는 정보가 없습니다.' // 리스트 조회시 빈값일때
     return res.status(404).json({
       result: {
@@ -76,11 +76,12 @@ router.post('/leave', async (req, res) => {
       }
     }) 
   } 
-
-  console.log('S3에서 사진 삭제하기');
-  const data = await dogMngDB.deleteDogImage(s3, rows[0].fvFilename, rows[0].svFilename); 
-  console.log('deleteDogImage data:', data); 
-  if (data) { // 파일 삭제가 성공했다면
+  
+  // S3에서 사진 삭제하기
+  console.log('list:', list); 
+  const data = await dogMngDB.deleteDogImage(s3, list); 
+  console.log('S3에서 사진 삭제하기 data:', data); 
+  if (data) { // 파일 삭제 true OR false
     const message = '회원탈퇴가 성공적으로 처리 되었습니다.' // 최종 성공시 보이는 문구
     return res.status(200).json({
       result: {
