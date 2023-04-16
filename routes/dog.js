@@ -89,19 +89,27 @@ const sideImageUploader = multer({
     s3: s3,
     bucket: 'user-input-photo/side', //생성한 버킷이름
     key: (req, file, callback) => {
+
+      console.log('sideImageUploade 호출');
+
+
       //const uploadDirectory = req.query.directory ?? '' //업로드할 디렉토리를 설정하기 위한 코드. 없어도 무관
       
       //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
       let newFilename = `${file.originalname}.jpeg`
-      
+      console.log('newFilename:', newFilename);
+
       //extname = 경로의 마지막 '.'에서 마지막 부분의 문자열 끝까지의 확장을 반환합니다. 경로의 마지막 부분에 '.'가 없거나 경로의 첫 번째 문자가 '.'인 경우 빈 문자열을 반환합니다.
       const extenstion  = path.extname(newFilename)
       console.error(`extenstion : ${extenstion}`);
+      console.log('extenstion:', extenstion);
 
       if (!allowedExtensions.includes(extenstion)) { //extion을 확인하기 위한 코드로 없어도 무관함. 허용되지 않는 확장자면 에러발생됨.
         console.error('파일의 확장자가 없습니다.');
         return callback(new Error('wrong extenstion'))
       }
+      console.log('S3 업로드 실행');
+
       //원래코드
       //callback(null, `${uploadDirectory}/${Date.now()}_${file.originalname}`) //업로드 기능(null, '업로드경로')
       //변경코드
@@ -126,7 +134,7 @@ router.post('/confirm/front/photo',
     const apiName = '반려견 앞모습 인풋사진 저장 API';
     console.log('req.body: %o', req.body)
     if (!req.file || !req.body.dogId || !req.body.type) {
-      resCode.returnResponseCode(res, 1002, apiName, null);
+      return resCode.returnResponseCode(res, 1002, apiName, null);
     }
     
     //클라이언트로부터 이미지 파일을 전달받는다.
@@ -143,9 +151,10 @@ router.post('/confirm/front/photo',
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
-      resCode.returnResponseCode(res, 9999, apiName, null);
+      return resCode.returnResponseCode(res, 9999, apiName, null);
     } else {
-      resCode.returnResponseCode(res, 0000, apiName, null);
+      console.log('0000 >>> ');
+      return resCode.returnResponseCode(res, 0000, apiName, null);
     }
 })
 
@@ -160,14 +169,15 @@ router.post('/confirm/side/photo',
   sideImageUploader.single('bodyPhoto'),
   async (req, res) => {
     const apiName = '반려견 옆모습 인풋사진 저장 API';
+    console.log('api 호출');
   
     if (!req.file || !req.body.dogId || !req.body.type) {
       returnResponseCode(res, 1002, apiName, null);
+      console.log('필수값 없음');
     }
 
     //클라이언트로부터 이미지 파일을 전달받는다. 
     const file = req.file;
-
     console.log('file값 확장자 확인: %o', file.originalname)
     //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
     let newFilename = `${file.originalname}.jpeg`
@@ -179,9 +189,9 @@ router.post('/confirm/side/photo',
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
-      resCode.returnResponseCode(res, 9999, apiName, null);
+      return resCode.returnResponseCode(res, 9999, apiName, null);
     } else {
-      resCode.returnResponseCode(res, 0000, apiName, null);
+      return resCode.returnResponseCode(res, 0000, apiName, null);
     }
 })
   
@@ -191,7 +201,7 @@ router.post('/confirm/side/photo',
 //     const apiName = 'test2 API';
 //     if (!req.params.userId) {
 //       console.log('userId 값 확인:', req.params.userId);
-//       resCode.returnResponseCode(res, 9999, apiName);
+//       return resCode.returnResponseCode(res, 9999, apiName);
 //     }
 //     return res.send('delete~~~');
 // });
@@ -206,24 +216,24 @@ router.delete('/model/:userId?', async (req, res) => {
   const userId = req.params.userId;
   console.log('userId 값 확인:', userId);
   if (!userId) {
-    resCode.returnResponseCode(res, 1002, apiName, null);
+    return resCode.returnResponseCode(res, 1002, apiName, null);
   }
   
   // 반려견 재생성을 위해 DB에서 기존 강아지정보 삭제
   const list = await dogMngDB.deleteDogForRemake(userId); // 삭제할 파일 이름들
   console.log('~~list: %o', list); // err -> list:false
   if (!list) { 
-    resCode.returnResponseCode(res, 1005, apiName, null);
+    return resCode.returnResponseCode(res, 1005, apiName, null);
   } 
 
   // S3에서 사진 삭제하기
   const data = await dogMngDB.deleteDogImage(s3, list); 
   console.log('S3에서 사진 삭제하기 data:', data); 
   if (data == 0000) { // 파일 삭제 true OR false
-    resCode.returnResponseCode(res, 0000, apiName, null);
+    return resCode.returnResponseCode(res, 0000, apiName, null);
 
   } else if (data == 1005) {
-    resCode.returnResponseCode(res, 1005, apiName, null);
+    return resCode.returnResponseCode(res, 1005, apiName, null);
   } 
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결

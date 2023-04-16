@@ -27,6 +27,22 @@ memberMng.prototype.mySQLQuery = (query) => {
       }
   })
 };
+function mySQLQuery(query) {
+  return new Promise(function(resolve, reject) {
+      try {
+        connection.query(query.text, query.params, function(err, rows, fields) {
+              if (err) {
+                  return reject(err);
+              } else {
+                  //순차적으로 실행하면 반환되는 행을 관리
+                  return resolve(camelcaseKeys(rows));
+              }
+          });
+      } catch (err) {
+          return reject(err);
+      }
+  })
+};
 
 
 /**
@@ -58,8 +74,12 @@ memberMng.prototype.selectMemberList = () => {
 // 1. 쿼리1) DB에서 회원탈퇴 처리
 // 2. 쿼리2) DB에서 강아지정보 삭제
 memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
-  console.log('..query : %o', query);
-
+  console.log('..query : %o', query); 
+  if (!query.leaveReasonCtx) {
+    query.leaveReasonCtx = null;
+  }
+  console.log('..query.leaveReasonCtx : %o', query.leaveReasonCtx);
+  
   // 쿼리1. 회원탈퇴 처리
   const updateMemberInfo = {
     text: `UPDATE MEMBER 
@@ -82,16 +102,21 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
     mySQLQuery(updateMemberInfo) // 쿼리1 실행
     .then((res1) => { // res:mySQLQuery의 결과
       console.log('res1 : %o', res1); // 쿼리2 실행
-      return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
-                                    // 해결) return mySQLQuery(deleteDog); 추가
+      console.log('res1 changedRows: %o', res1.changedRows); // 쿼리2 실행
+      if (res1.changedRows == 1) { // 수정) changedRows값이 0이 아닌걸로 조건문 수정하기
+        return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
+                                      // 해결) return mySQLQuery(deleteDog); 추가
+      } else {
+        return resolve(1005); 
+      }
     })
     .then((res2) => {
-      console.log('res2[0] : %o', res2[0]); // {fvFilename, svFilename}
-      return resolve(res2[0]);
+      console.log('res2 : %o', res2); // {fvFilename, svFilename}
+      return resolve(res2);
     })
     .catch((err) => {
       console.log('err:'+err)
-      return reject(false); 
+      return resolve(9999); 
     });
   });
 }
@@ -186,3 +211,5 @@ memberMng.prototype.updateMemberInfo = (query) => {
 
 //memberMng 모듈 export 
 module.exports = new memberMng();
+
+	
