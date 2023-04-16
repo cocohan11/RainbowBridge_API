@@ -59,7 +59,7 @@ router.post('/leave', async (req, res) => {
 
   // 파라미터값 누락 확인
   if (req.body.email==2 || req.body.leaveReasonNum==1 || req.body.userId==1) { // POST는 비어있으면 다음과 같이 값을 넣어 반환 { email: 2, leaveReasonNum: 1, userId: 1 }
-    resCode.returnResponseCode(res, 1002, apiName);
+    resCode.returnResponseCode(res, 1002, apiName, null);
   }
 
   // DB에서 회원정보 UPDATE, 강아지정보 DELETE
@@ -67,7 +67,7 @@ router.post('/leave', async (req, res) => {
   console.log('~~list: %o', list); // err -> rows:false
   console.log('~~list[0]: %o', list[0]); // rows[0]:{ fvFilename: 'start.png', svFilename: 'text.jpg' } 
   if (!list) { 
-    resCode.returnResponseCode(res, 1005, apiName);
+    resCode.returnResponseCode(res, 1005, apiName, null);
   } 
   
   // S3에서 사진 삭제하기
@@ -75,11 +75,11 @@ router.post('/leave', async (req, res) => {
   const data = await dogMngDB.deleteDogImage(s3, list); 
   console.log('S3에서 사진 삭제하기 data:', data); 
   if (data) { // 파일 삭제 true OR false
-    resCode.returnResponseCode(res, 0000, apiName);
+    resCode.returnResponseCode(res, 0000, apiName, null);
   } 
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
-  resCode.returnResponseCode(res, 9999, apiName);
+  resCode.returnResponseCode(res, 9999, apiName, null);
 })
 
 /**
@@ -91,17 +91,18 @@ router.get('/:email?', async (req, res) => {
   const apiName = '회원정보 조회 API';
   const email = req.params.email;
   if (!email) {
-    resCode.returnResponseCode(res, 1002, apiName);
+    resCode.returnResponseCode(res, 1002, apiName, null);
   }
 
   const rows = await memberMngDB.selectMemberByEmail(email);
   console.log('rows[0]: %o', rows[0]);
   if (rows == 9999) {
-    resCode.returnResponseCode(res, 9999, apiName);
+    resCode.returnResponseCode(res, 9999, apiName, null);
   } else if (rows == 1005) {
-    resCode.returnResponseCode(res, 1005, apiName);
+    resCode.returnResponseCode(res, 1005, apiName, null);
   } else {
-    res.json({'result': rows[0]})  
+    resCode.returnResponseCode(res, 0000, apiName, rows[0]);
+    // res.json({'result': rows[0]})  // 수정하기 message에 해당 객체 출력하기
   }
 })
 
@@ -116,15 +117,15 @@ router.post('/join', async (req, res) => {
   if (!req.body.loginSNSType || !req.body.email) {
     console.log('loginSNSType %o:', req.body.loginSNSType);
     console.log('email %o:', req.body.email);
-    resCode.returnResponseCode(res, 1002, apiName);
+    resCode.returnResponseCode(res, 1002, apiName, null);
   }
 
   const rows = await memberMngDB.insertNewMember(req.body);
   console.log(`rows: ${rows}`);
   if (rows == 9999) {
-    resCode.returnResponseCode(res, 9999, apiName);
+    resCode.returnResponseCode(res, 9999, apiName, null);
   } else {
-    resCode.returnResponseCode(res, 0000, apiName);
+    resCode.returnResponseCode(res, 0000, apiName, null);
   }
 })
 
@@ -139,7 +140,7 @@ router.post('/info', async (req, res) => {
   
   const rows = await memberMngDB.updateMemberInfo(req.body);
   console.log('rows: %o', rows);
-  resCode.returnResponseCode(res, 0000, apiName);
+  resCode.returnResponseCode(res, 0000, apiName, null);
   // 추가예정
 })
 

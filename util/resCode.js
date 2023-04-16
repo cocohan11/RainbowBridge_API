@@ -4,12 +4,16 @@ function resCode() {
  * 에러코드로 응답을 받기 
  * 파라미터로 에러코드 넣으면 바로 json출력해주기
  */
-resCode.prototype.returnResponseCode = (res, value, apiName) => {
-    console.log('returnResponseCode:', value+'/'+apiName);
+resCode.prototype.returnResponseCode = (res, value, apiName, subMessage) => { // subMessage:특별히 출력한 메세지가있는경우 기입, 없으면 null
+    console.log('returnResponseCode:', value+'/'+apiName+'/'+subMessage);
     switch (value) {
   
       case 0000:
-        message = apiName+'를 성공했습니다'
+        if (subMessage) {
+          message = subMessage
+        } else {
+          message = apiName+'를 성공했습니다'
+        }
         res.status(200).json({
           result: {
             code: '0000', message: message
@@ -18,9 +22,12 @@ resCode.prototype.returnResponseCode = (res, value, apiName) => {
         break;
     
       case 1002 :
-        console.log('1002');
-        message = '필수파라미터가 누락되어있습니다!'
-        res.json({
+        if (subMessage) {
+          message = subMessage
+        } else {
+          message = '필수파라미터가 누락되어있습니다!'
+        }
+        res.status(200).json({
           result: {
             code: '1002', message
           }
@@ -28,7 +35,11 @@ resCode.prototype.returnResponseCode = (res, value, apiName) => {
         break;
     
       case 1005 :
-        message = '해당되는 정보가 없습니다!' 
+        if (subMessage) {
+          message = subMessage
+        } else {
+          message = '해당되는 정보가 없습니다!' 
+        }
         res.status(404).json({
           result: {
             code: '1005', message
@@ -36,8 +47,12 @@ resCode.prototype.returnResponseCode = (res, value, apiName) => {
         })
         break;
     
-      default :
-        message = apiName+'를 실패했습니다!' // ex) 3D 모델 재성성 API를 실패했습니다!
+      default:
+        if (subMessage) {
+          message = subMessage
+        } else {
+          message = apiName+'를 실패했습니다!' // ex) 3D 모델 재성성 API를 실패했습니다!
+        }
         res.json({
           result: {
             code: '9999', message : message

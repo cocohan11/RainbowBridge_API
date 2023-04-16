@@ -126,7 +126,7 @@ router.post('/confirm/front/photo',
     const apiName = '반려견 앞모습 인풋사진 저장 API';
     console.log('req.body: %o', req.body)
     if (!req.file || !req.body.dogId || !req.body.type) {
-      resCode.returnResponseCode(res, 1002, apiName);
+      resCode.returnResponseCode(res, 1002, apiName, null);
     }
     
     //클라이언트로부터 이미지 파일을 전달받는다.
@@ -143,9 +143,9 @@ router.post('/confirm/front/photo',
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
-      resCode.returnResponseCode(res, 9999, apiName);
+      resCode.returnResponseCode(res, 9999, apiName, null);
     } else {
-      resCode.returnResponseCode(res, 0000, apiName);
+      resCode.returnResponseCode(res, 0000, apiName, null);
     }
 })
 
@@ -162,7 +162,7 @@ router.post('/confirm/side/photo',
     const apiName = '반려견 옆모습 인풋사진 저장 API';
   
     if (!req.file || !req.body.dogId || !req.body.type) {
-      returnResponseCode(res, 1002, apiName);
+      returnResponseCode(res, 1002, apiName, null);
     }
 
     //클라이언트로부터 이미지 파일을 전달받는다. 
@@ -179,9 +179,9 @@ router.post('/confirm/side/photo',
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
-      resCode.returnResponseCode(res, 9999, apiName);
+      resCode.returnResponseCode(res, 9999, apiName, null);
     } else {
-      resCode.returnResponseCode(res, 0000, apiName);
+      resCode.returnResponseCode(res, 0000, apiName, null);
     }
 })
   
@@ -206,28 +206,28 @@ router.delete('/model/:userId?', async (req, res) => {
   const userId = req.params.userId;
   console.log('userId 값 확인:', userId);
   if (!userId) {
-    resCode.returnResponseCode(res, 1002, apiName);
+    resCode.returnResponseCode(res, 1002, apiName, null);
   }
   
   // 반려견 재생성을 위해 DB에서 기존 강아지정보 삭제
   const list = await dogMngDB.deleteDogForRemake(userId); // 삭제할 파일 이름들
   console.log('~~list: %o', list); // err -> list:false
   if (!list) { 
-    resCode.returnResponseCode(res, 1005, apiName);
+    resCode.returnResponseCode(res, 1005, apiName, null);
   } 
 
   // S3에서 사진 삭제하기
   const data = await dogMngDB.deleteDogImage(s3, list); 
   console.log('S3에서 사진 삭제하기 data:', data); 
   if (data == 0000) { // 파일 삭제 true OR false
-    resCode.returnResponseCode(res, 0000, apiName);
+    resCode.returnResponseCode(res, 0000, apiName, null);
 
   } else if (data == 1005) {
-    resCode.returnResponseCode(res, 1005, apiName);
+    resCode.returnResponseCode(res, 1005, apiName, null);
   } 
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
-  resCode.returnResponseCode(res, 9999, apiName);
+  resCode.returnResponseCode(res, 9999, apiName, null);
 })
 
 module.exports = router;

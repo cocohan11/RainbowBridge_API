@@ -18,7 +18,7 @@ dogMng.prototype.deleteDogForRemake = (userId) => {
             FROM DOG WHERE user_id = ?;`,
     params : userId
   };
-  const updateDogInfo = { // 강아지 정보를 아예 삭제하는게 아니라 사진만 비워준다. 
+  const updateDogInfo = { // 강아지 정보를 아예 삭제하는게 아니라 사진정보만 비워준다. 
     text: `UPDATE DOG SET 
             fv_filename = null,
             fv_filepath = null,
