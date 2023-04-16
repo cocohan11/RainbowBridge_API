@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const memberMngDB = require('../model/memberMng');
 const dogMngDB = require('../model/dogMng');
+const resCode = require('../util/resCode');
 const config = require('../config/config');
 const AWS = require('aws-sdk');
 let s3 = new AWS.S3();
@@ -49,20 +50,16 @@ router.get('/test', async (req, res) => {
 })
 
 /**
- * 회원탈퇴 정보변경 
+ * 회원탈퇴 정보변경 API
  * @route {POST} api/member/leave
  */
 router.post('/leave', async (req, res) => {
+  const apiName = '회원탈퇴 정보변경 API';
   console.log('req.body: %o', req.body);
 
   // 파라미터값 누락 확인
-  if (!req.body.email || !req.body.leaveReasonNum || !req.body.userId) {
-    const message = '필수파라미터가 누락되어있습니다!'
-    return res.status(400).json({
-      result: {
-        code: '1002', message
-      }
-    })
+  if (req.body.email==2 || req.body.leaveReasonNum==1 || req.body.userId==1) { // POST는 비어있으면 다음과 같이 값을 넣어 반환 { email: 2, leaveReasonNum: 1, userId: 1 }
+    resCode.returnResponseCode(res, 1002, apiName);
   }
 
   // DB에서 회원정보 UPDATE, 강아지정보 DELETE
@@ -70,12 +67,7 @@ router.post('/leave', async (req, res) => {
   console.log('~~list: %o', list); // err -> rows:false
   console.log('~~list[0]: %o', list[0]); // rows[0]:{ fvFilename: 'start.png', svFilename: 'text.jpg' } 
   if (!list) { 
-    const message = '해당되는 정보가 없습니다.' // 리스트 조회시 빈값일때
-    return res.status(404).json({
-      result: {
-        code: '1005', message
-      }
-    }) 
+    resCode.returnResponseCode(res, 1005, apiName);
   } 
   
   // S3에서 사진 삭제하기
@@ -83,34 +75,31 @@ router.post('/leave', async (req, res) => {
   const data = await dogMngDB.deleteDogImage(s3, list); 
   console.log('S3에서 사진 삭제하기 data:', data); 
   if (data) { // 파일 삭제 true OR false
-    const message = '회원탈퇴가 성공적으로 처리 되었습니다.' // 최종 성공시 보이는 문구
-    return res.status(200).json({
-      result: {
-        code: '0000', message: message
-      }
-    });
+    resCode.returnResponseCode(res, 0000, apiName);
   } 
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
-  message = '회원탈퇴에 실패하였습니다. '
-  return res.json({
-    result: {
-      code: '9999', message : message
-    }
-  }) 
+  resCode.returnResponseCode(res, 9999, apiName);
 })
 
 /**
- * 회원정보 조회 
+ * 회원정보 조회 API
  * @route {GET} api/member/:email
  * @desc 로그인에 사용
  */
-router.get('/:email', async (req, res) => {
+router.get('/:email?', async (req, res) => {
+  const apiName = '회원정보 조회 API';
   const email = req.params.email;
+  if (!email) {
+    resCode.returnResponseCode(res, 1002, apiName);
+  }
+
   const rows = await memberMngDB.selectMemberByEmail(email);
   console.log('rows[0]: %o', rows[0]);
-  if (!rows[0]) {
-    res.json({result: {'message': '해당되는 회원정보가 없습니다.'}})
+  if (rows == 9999) {
+    resCode.returnResponseCode(res, 9999, apiName);
+  } else if (rows == 1005) {
+    resCode.returnResponseCode(res, 1005, apiName);
   } else {
     res.json({'result': rows[0]})  
   }
@@ -118,30 +107,40 @@ router.get('/:email', async (req, res) => {
 
 
 /**
- * 회원정보 가입 
+ * 회원정보 가입 API 
  * @route {POST} api/member/join
  */
 router.post('/join', async (req, res) => {
+  const apiName = '회원정보 가입 API';
+  console.log('body %o:', req.body);
   if (!req.body.loginSNSType || !req.body.email) {
-    throw new MissingParameterError('필수파라미터가 누락되어있습니다!')
+    console.log('loginSNSType %o:', req.body.loginSNSType);
+    console.log('email %o:', req.body.email);
+    resCode.returnResponseCode(res, 1002, apiName);
   }
+
   const rows = await memberMngDB.insertNewMember(req.body);
-  message = '회원정보 등록 완료!'
   console.log(`rows: ${rows}`);
-  console.log(`message: ${message}`);
-  res.json({result: {message: message, userId: rows}})
+  if (rows == 9999) {
+    resCode.returnResponseCode(res, 9999, apiName);
+  } else {
+    resCode.returnResponseCode(res, 0000, apiName);
+  }
 })
 
 
 /**
- * 사용자 정보 등록(임시)
- * @route {POST} api/member/dog
+ * 사용자 정보 등록 API (임시) 
+ * @route {POST} api/member/info
  */
-router.post('/dog', async (req, res) => {
+router.post('/info', async (req, res) => {
+  const apiName = '사용자 정보 등록 API (임시)';
   console.log('req.body: %o', req.body);
+  
   const rows = await memberMngDB.updateMemberInfo(req.body);
   console.log('rows: %o', rows);
-  res.json({'result': {'message': '반려견정보 등록 완료!', 'dogId': rows}})
+  resCode.returnResponseCode(res, 0000, apiName);
+  // 추가예정
 })
 
 

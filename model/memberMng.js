@@ -103,11 +103,20 @@ memberMng.prototype.selectMemberByEmail = (query) => {
   
   return new Promise((resolve, reject) => {
     connection.query(sql, [query], (err, rows) => {
+      console.log('rows.: %o', rows);
+      // console.log('rows.length:', rows.length);
       if (err) {
-        console.log(err)
-        return reject(new Error('회원정보 DB 조회 오류'));
+        console.log('err,', err)
+        return resolve(9999);
       } else {
-        return resolve(camelcaseKeys(rows));
+        if (!rows) {
+          return resolve(1005);
+        }
+        if (rows.length == 1) {
+          return resolve(rows);
+        } else {
+          return resolve(9999);
+        }
       }
     })
   })
@@ -126,7 +135,7 @@ memberMng.prototype.insertNewMember = (query) => {
       (err, rows) => {
       if (err) {
         console.log(err)
-        return reject(new Error('회원정보 DB 저장 오류'));
+        return resolve(9999);
       } else {
         return resolve(rows.insertId);
       }
@@ -157,18 +166,18 @@ memberMng.prototype.updateMemberInfo = (query) => {
   // })
 
   const sql = 'INSERT INTO DOG (dog_name, breed_type, user_id) VALUE (?, ?, ?)';  
-  
+  // todo: created_date 컬럼에 값 추가해주기(now)
   return new Promise((resolve, reject) => {
     connection.query ( 
       sql, 
       [query.dogName, query.breedType, query.userId],
       (err, rows) => {
-      if (err) {
-        console.log(err)
-        return reject(new Error('반려견 정보 DB 저장 오류'));
-      } else {
-        return resolve(rows.insertId);
-      }
+        if (err) {
+          console.log(err)
+          return resolve(9999);
+        } else {
+          return resolve(rows.insertId);
+        }
     })
   })
 

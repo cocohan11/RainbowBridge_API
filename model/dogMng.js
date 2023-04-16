@@ -11,7 +11,6 @@ function dogMng() {
 
 // DB에서 반려견정보 DELETE
 dogMng.prototype.deleteDogForRemake = (userId) => { 
-  // console.log('..s3 : %o', s3);
   console.log('..userId : ', userId);
 
   const selectDog = { // S3에 저장된 파일을 삭제하기위해 파일명 알아내기
@@ -22,7 +21,9 @@ dogMng.prototype.deleteDogForRemake = (userId) => {
   const updateDogInfo = { // 강아지 정보를 아예 삭제하는게 아니라 사진만 비워준다. 
     text: `UPDATE DOG SET 
             fv_filename = null,
+            fv_filepath = null,
             sv_filename = null,
+            sv_filepath = null, 
             fv_txt_filename = null,
             sv_txt_filename = null
            WHERE user_id = ?`, 
@@ -35,11 +36,17 @@ dogMng.prototype.deleteDogForRemake = (userId) => {
     memberMng.mySQLQuery(selectDog) // 쿼리1 실행
     .then((res1) => { 
       result1 = res1;
-      console.log('result1 : %o', result1); // {fvFilename, svFilename, fv_txt_filename, sv_txt_filename}
-      return memberMng.mySQLQuery(updateDogInfo); // 쿼리2 실행
+
+      if (result1.length == 0) {
+        console.log('result1length : %o', result1.length); 
+        result1 = false;
+      } else {
+        console.log('result1 : %o', result1); // {fvFilename, svFilename, fv_txt_filename, sv_txt_filename}
+        return memberMng.mySQLQuery(updateDogInfo); // 쿼리2 실행
+      }
     })
     .then((res2) => {
-      // console.log('res2 : %o', res2);
+      console.log('res2');
       return resolve(result1);
     })
     .catch((err) => {
@@ -64,9 +71,6 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${list[0].svFilename}` })
   bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `front/${list[0].fvTxtFilename}` })
   bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${list[0].svTxtFilename}` })
-
-
-
 
 
   return Promise.all([ // Promise.all:비동기. 모든 함수의 결과를 기다린 후 하나의 프로미스 객체를 반환
@@ -177,7 +181,8 @@ dogMng.prototype.insertDogPhoto = (query) => {
       (err, rows) => {
       if (err) {
         console.log(err)
-        return reject(new Error('반려견 사진 정보 DB 저장 오류'));
+        console.log('에러다~~!!~!~!')
+        return resolve(9999);
       } else {
         return resolve(rows);
       }

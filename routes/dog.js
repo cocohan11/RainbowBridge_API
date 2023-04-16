@@ -1,5 +1,6 @@
 /** 반려견모델생성 처리관련 API */
 const express = require('express');
+const resCode = require('../util/resCode');
 // multipart/form-data 를 다루기 위한 node.js 의 미들웨어
 const multer = require('multer'); // 이미지, 동영상 등을 비롯한 여러 가지 파일들을 멀티파트 형식으로 업로드할 때 사용하는 미들웨어
 const multerS3  = require('multer-s3')
@@ -26,7 +27,7 @@ class CommonError extends Error {}
 
 // AWS 접근키 설정
 AWS.config.update({
-  region: 'ap-northeast-2',
+  region: config.region,
   accessKeyId: config.accessKeyId,
   secretAccessKey: config.secretAccessKey
 });
@@ -38,7 +39,6 @@ const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp']
 
 
 /**
- * 
  * 클라이언트에서 받은 이미지를 파일로 저장하기 위해 multer 라이브러리 사용
  * 인자값 설명
   - multer({storage: _storage}) : storage를 설정해, 파일을 저장하게 한다
@@ -120,40 +120,33 @@ const sideImageUploader = multer({
  * @route {POST} api/dog/confirm/front/photo
  */
 router.post('/confirm/front/photo', 
-  frontImageUploader.single('facePhoto'), // 얘가먼저 실행됨.
+  frontImageUploader.single('facePhoto'), // single()가먼저 실행됨.
                                           // 사용자가 전송한 데이터에 파일이 포함되어 있다면 가공해서 req객체에 file이라는 프로포티를 약속하는 함수 
   async (req, res) => {
-  
-  if (!req.file || !req.body.dogId || !req.body.type) {
-    return res.status(400).json({ 
-      result: {
-        code: '1002', message: '필수파라미터가 누락되어있습니다!'
-      }
-    })
-  }
-  
-  //클라이언트로부터 이미지 파일을 전달받는다.
-  const file = req.file;
-  console.log('file값 확장자 확인: %o', file.originalname)
+    const apiName = '반려견 앞모습 인풋사진 저장 API';
+    console.log('req.body: %o', req.body)
+    if (!req.file || !req.body.dogId || !req.body.type) {
+      resCode.returnResponseCode(res, 1002, apiName);
+    }
+    
+    //클라이언트로부터 이미지 파일을 전달받는다.
+    const file = req.file;
+    console.log('file값 확장자 확인: %o', file.originalname)
 
-  //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-  let newFilename = `${file.originalname}.jpeg`
-  
-  //DB에 새로운 파일명과 S3 파일 저장경로 저장
-  req.body.filename = newFilename
-  req.body.path = file.location
-  console.log('req.body.path 값 확인 >>> ', req.body.path);
+    //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
+    let newFilename = `${file.originalname}.jpeg`
+    
+    //DB에 새로운 파일명과 S3 파일 저장경로 저장
+    req.body.filename = newFilename
+    req.body.path = file.location
+    console.log('req.body.path 값 확인 >>> ', req.body.path);
 
-  const rows = await dogMngDB.insertDogPhoto(req.body);
-  if (rows) {
-    return res.json({
-      result: {
-        code: '0000', 
-        message: '앞모습 이미지 업로드 처리 성공!!',
-        filePath: file.location
-      }
-    })
-  }
+    const rows = await dogMngDB.insertDogPhoto(req.body);
+    if (rows == 9999) {
+      resCode.returnResponseCode(res, 9999, apiName);
+    } else {
+      resCode.returnResponseCode(res, 0000, apiName);
+    }
 })
 
 
@@ -166,104 +159,75 @@ router.post('/confirm/front/photo',
 router.post('/confirm/side/photo', 
   sideImageUploader.single('bodyPhoto'),
   async (req, res) => {
+    const apiName = '반려견 옆모습 인풋사진 저장 API';
   
-  if (!req.file || !req.body.dogId || !req.body.type) {
-    return res.status(400).json({
-      result: {
-        code: '1002', message: '필수파라미터가 누락되어있습니다!'
-      }
-    })
-  }
+    if (!req.file || !req.body.dogId || !req.body.type) {
+      returnResponseCode(res, 1002, apiName);
+    }
 
-  //클라이언트로부터 이미지 파일을 전달받는다. 
-  const file = req.file;
+    //클라이언트로부터 이미지 파일을 전달받는다. 
+    const file = req.file;
 
-  console.log('file값 확장자 확인: %o', file.originalname)
-  //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-  let newFilename = `${file.originalname}.jpeg`
-  
-  //DB에 파일명과 S3 파일 저장경로 저장
-  req.body.filename = newFilename
-  req.body.path = file.location
-  console.log('req.body.path 값 확인 >>> ', req.body.path);
+    console.log('file값 확장자 확인: %o', file.originalname)
+    //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
+    let newFilename = `${file.originalname}.jpeg`
+    
+    //DB에 파일명과 S3 파일 저장경로 저장
+    req.body.filename = newFilename
+    req.body.path = file.location
+    console.log('req.body.path 값 확인 >>> ', req.body.path);
 
-  const rows = await dogMngDB.insertDogPhoto(req.body);
-  if (rows) {
-    return res.json({
-      result: {
-        code: '0000', 
-        message: '옆모습 이미지 업로드 처리 성공!!',
-        filePath: file.location
-      }
-    })
-  }
+    const rows = await dogMngDB.insertDogPhoto(req.body);
+    if (rows == 9999) {
+      resCode.returnResponseCode(res, 9999, apiName);
+    } else {
+      resCode.returnResponseCode(res, 0000, apiName);
+    }
 })
+  
 
+//   router.get('/test2/:userId?', async (req, res) => {
+//     console.log('req.params %o:', req.params);
+//     const apiName = 'test2 API';
+//     if (!req.params.userId) {
+//       console.log('userId 값 확인:', req.params.userId);
+//       resCode.returnResponseCode(res, 9999, apiName);
+//     }
+//     return res.send('delete~~~');
+// });
 
+  
 /**
- * 3D 모델 재성성 API - 사용자가 생성한 3D모델 재생성
+ * 3D 모델 재성성을 위한 강아지삭제 API - 사용자가 생성한 3D모델 재생성
  * @route {DELETE} api/dog/model/userId
  */
-router.delete('/model/:userId', async (req, res) => {
+router.delete('/model/:userId?', async (req, res) => {
+  const apiName = '3D 모델 재성성을 위한 강아지삭제 API';
   const userId = req.params.userId;
   console.log('userId 값 확인:', userId);
-  // 파라미터값 누락 확인
   if (!userId) {
-    const message = '필수파라미터가 누락되어있습니다!'
-    return res.status(400).json({
-      result: {
-        code: '1002', message
-      }
-    })
+    resCode.returnResponseCode(res, 1002, apiName);
   }
   
   // 반려견 재생성을 위해 DB에서 기존 강아지정보 삭제
   const list = await dogMngDB.deleteDogForRemake(userId); // 삭제할 파일 이름들
-  console.log('~~list: %o', list); // err -> rows:false
-  // console.log('~~list[0]: %o', list[0]); // rows[0]:{ fvFilename: 'start.png', svFilename: 'text.jpg' } 
+  console.log('~~list: %o', list); // err -> list:false
   if (!list) { 
-    const message = '해당되는 정보가 없습니다.' 
-    return res.status(404).json({
-      result: {
-        code: '1005', message
-      }
-    }) 
+    resCode.returnResponseCode(res, 1005, apiName);
   } 
 
   // S3에서 사진 삭제하기
   const data = await dogMngDB.deleteDogImage(s3, list); 
   console.log('S3에서 사진 삭제하기 data:', data); 
   if (data == 0000) { // 파일 삭제 true OR false
-    const message = '성공적으로 삭제했습니다.' // 최종 성공시 보이는 문구
-    return res.status(200).json({
-      result: {
-        code: '0000', message: message
-      }
-    });
+    resCode.returnResponseCode(res, 0000, apiName);
+
   } else if (data == 1005) {
-    const message = '해당되는 정보가 없습니다.' 
-    return res.status(404).json({
-      result: {
-        code: '1005', message
-      }
-    })
+    resCode.returnResponseCode(res, 1005, apiName);
   } 
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
-  message = '기존 강아지모델 삭제에 실패했습니다.'
-  return res.json({
-    result: {
-      code: '9999', message : message
-    }
-  }) 
+  resCode.returnResponseCode(res, 9999, apiName);
 })
-
-
-// 에러코드로 응답을 받기
-// 파라미터로 에러코드 넣으면 바로 json출력해주기
-function returnResponseCode() {
-  // switch? 검색해서 만들기
-  
-}
 
 module.exports = router;
