@@ -9,16 +9,21 @@ resCode.prototype.returnResponseCode = (res, value, apiName, subMessage) => { //
     switch (value) {
   
       case 0000:
+        message = apiName+'를 성공했습니다'
         if (subMessage) {
-          message = subMessage
+          res.status(200).json({
+            result: {
+              code: '0000', message: message, return: subMessage
+            }
+          });
         } else {
-          message = apiName+'를 성공했습니다'
+          res.status(200).json({
+            result: {
+              code: '0000', message: message
+            }
+          });
         }
-        res.status(200).json({
-          result: {
-            code: '0000', message: message
-          }
-        });
+
         break;
     
       case 1002 :

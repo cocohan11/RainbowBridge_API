@@ -133,19 +133,6 @@ router.post('/join', async (req, res) => {
 })
 
 
-/**
- * 사용자 정보 등록 API (임시) 
- * @route {POST} api/member/dog
- */
-router.post('/dog', async (req, res) => {
-  const apiName = '사용자 정보 등록 API (임시)';
-  console.log('req.body: %o', req.body);
-  
-  const rows = await memberMngDB.updateMemberInfo(req.body);
-  console.log('rows: %o', rows);
-  return resCode.returnResponseCode(res, 0000, apiName, null);
-  // 추가예정
-})
 
 
 

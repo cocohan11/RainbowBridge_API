@@ -63,14 +63,17 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
 
   // 버킷 정보
   const item = list[0];
+  console.log('list66 :', list);
+  console.log('item66 :', item);
   if (item.fvFilename === null || item.svFilename === null || item.fvTxtFilename === null || item.svTxtFilename === null) {
+    console.log('파일명 필수값 확인 item.fvFilename:', item.fvFilename);
     return 1005; // 응답코드
   }
   let bucketPathList = [];
-  bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${list[0].fvFilename}` })
-  bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${list[0].svFilename}` })
-  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `front/${list[0].fvTxtFilename}` })
-  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${list[0].svTxtFilename}` })
+  bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${item.fvFilename}` })
+  bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${item.svFilename}` })
+  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `front/${item.fvTxtFilename}` })
+  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.svTxtFilename}` })
 
 
   return Promise.all([ // Promise.all:비동기. 모든 함수의 결과를 기다린 후 하나의 프로미스 객체를 반환
@@ -208,6 +211,27 @@ dogMng.prototype.selectDogInfo = (query) => {
       } else {
         return resolve(rows);
       }
+    })
+  })
+}
+
+
+//반려견 정보 등록
+dogMng.prototype.updateMemberInfo = (query) => {
+
+  const sql = 'INSERT INTO DOG (dog_name, breed_type, user_id, created_date) VALUE (?, ?, ?, now())';  
+  // todo: created_date 컬럼에 값 추가해주기(now)
+  return new Promise((resolve, reject) => {
+    connection.query ( 
+      sql, 
+      [query.dogName, query.breedName, query.userId],
+      (err, rows) => {
+        if (err) {
+          console.log(err)
+          return resolve(9999);
+        } else {
+          return resolve(rows.insertId);
+        }
     })
   })
 }

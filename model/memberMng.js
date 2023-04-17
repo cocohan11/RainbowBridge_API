@@ -91,10 +91,10 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
     params : [query.leaveReasonNum, query.leaveReasonCtx, query.userId, query.email] // 탈퇴사유가 없는 요청은 query.leaveReasonCtx null이다.
   }
 
-  // 쿼리2. DB에서 탈퇴한 사용자의 강아지사진에 대한 정보삭제
+  // 쿼리2. DB에서 탈퇴한 사용자의 강아지정보삭제
   const deleteDog = { 
     text: `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename FROM DOG WHERE user_id = ?; 
-           DELETE FROM DOG WHERE user_id = ?;`,
+           DELETE FROM DOG WHERE user_id = ?;`, // 강아지 row 삭제
     params : [query.userId, query.userId]
   };
 
@@ -169,47 +169,7 @@ memberMng.prototype.insertNewMember = (query) => {
 }
 
 
-//반려견 정보 등록
-memberMng.prototype.updateMemberInfo = (query) => {
-  // const insertDogInfo = {
-  //   text : 'INSERT INTO DOG (dog_name, breed_type, user_id) VALUE (?, ?, ?)',
-  //   params : [query.dogName, query.breedType, query.userId]
-  // };
-
-  // //1.26: 사용자 닉네임 미사용으로 삭제해야함
-  // const updateMemberInfo = {
-  //   text: 'UPDATE MEMBER SET nickname = ? WHERE user_id = ?', 
-  //   params : [query.nickname, query.userId]
-  // }
-
-  // return new Promise((resolve, reject) => {
-  //   //쿼리들 순차 실행
-  //   mySQLQuery(insertDogInfo)
-  //   .then(mySQLQuery(updateMemberInfo))
-  //   .then((res) => { resolve(camelcaseKeys(res)) })
-  //   .catch((err) => { reject(new Error('Error while executing SQL Query : %o', err)) });
-  // })
-
-  const sql = 'INSERT INTO DOG (dog_name, breed_type, user_id) VALUE (?, ?, ?)';  
-  // todo: created_date 컬럼에 값 추가해주기(now)
-  return new Promise((resolve, reject) => {
-    connection.query ( 
-      sql, 
-      [query.dogName, query.breedType, query.userId],
-      (err, rows) => {
-        if (err) {
-          console.log(err)
-          return resolve(9999);
-        } else {
-          return resolve(rows.insertId);
-        }
-    })
-  })
-
-}
 
 
 //memberMng 모듈 export 
 module.exports = new memberMng();
-
-	

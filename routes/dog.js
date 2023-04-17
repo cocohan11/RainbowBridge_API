@@ -142,7 +142,7 @@ router.post('/confirm/front/photo',
     console.log('file값 확장자 확인: %o', file.originalname)
 
     //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-    let newFilename = `${file.originalname}.jpeg`
+    let newFilename = `${file.originalname}.jpeg` // 테스트할 때 출력:71670370.jpeg.jpeg
     
     //DB에 새로운 파일명과 S3 파일 저장경로 저장
     req.body.filename = newFilename
@@ -238,6 +238,26 @@ router.delete('/model/:userId?', async (req, res) => {
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
   resCode.returnResponseCode(res, 9999, apiName, null);
+})
+
+
+/**
+ * 반려견 정보 등록 API
+ * @route {POST} api/member/dog
+ */
+router.post('/create', async (req, res) => {
+  const apiName = '반려견 정보 등록 API';
+  console.log('req.body: %o', req.body);
+  if (!req.body.userId || !req.body.dogName || !req.body.breedName) {
+    return resCode.returnResponseCode(res, 1002, apiName, null);
+  }
+  const rows = await dogMngDB.updateMemberInfo(req.body);
+  console.log('rows: %o', rows);
+  if (rows == 9999) {
+    return resCode.returnResponseCode(res, 9999, apiName, null);
+  } else {
+    return resCode.returnResponseCode(res, 0000, apiName, rows); // insert_id 알고싶으면 null 대신 'rows' 넣기
+  }
 })
 
 module.exports = router;
