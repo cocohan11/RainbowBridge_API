@@ -111,8 +111,8 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
       }
     })
     .then((res2) => {
-      console.log('res2 : %o', res2); // {fvFilename, svFilename}
-      return resolve(res2);
+      console.log('res2 ㅡㅡ : %o', res2); // {fvFilename, svFilename}
+      return resolve([res2[0][0]]);
     })
     .catch((err) => {
       console.log('err:'+err)

@@ -131,10 +131,10 @@ router.post('/confirm/front/photo',
   frontImageUploader.single('facePhoto'), // single()가먼저 실행됨.
                                           // 사용자가 전송한 데이터에 파일이 포함되어 있다면 가공해서 req객체에 file이라는 프로포티를 약속하는 함수 
   async (req, res) => {
-    const apiName = '반려견 앞모습 인풋사진 저장 API';
+    const apiName = '반려견 정보 등록';
     console.log('req.body: %o', req.body)
     if (!req.file || !req.body.dogId || !req.body.type) {
-      return resCode.returnResponseCode(res, 1002, apiName, null);
+      return resCode.returnResponseCode(res, 1002, apiName, null, null); 
     }
     
     //클라이언트로부터 이미지 파일을 전달받는다.
@@ -151,10 +151,9 @@ router.post('/confirm/front/photo',
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
-      return resCode.returnResponseCode(res, 9999, apiName, null);
+      return resCode.returnResponseCode(res, 9999, apiName, null, null);
     } else {
-      console.log('0000 >>> ');
-      return resCode.returnResponseCode(res, 0000, apiName, null);
+      return resCode.returnResponseCode(res, 0000, apiName, "filePath", req.body.path);
     }
 })
 
@@ -167,12 +166,12 @@ router.post('/confirm/front/photo',
  */
 router.post('/confirm/side/photo', 
   sideImageUploader.single('bodyPhoto'),
-  async (req, res) => {
-    const apiName = '반려견 옆모습 인풋사진 저장 API';
-    console.log('api 호출');
   
+  async (req, res) => {
+    const apiName = '반려견 정보 등록';
+    console.log('api 호출');
     if (!req.file || !req.body.dogId || !req.body.type) {
-      returnResponseCode(res, 1002, apiName, null);
+      return resCode.returnResponseCode(res, 1002, apiName, null, null); 
       console.log('필수값 없음');
     }
 
@@ -189,21 +188,21 @@ router.post('/confirm/side/photo',
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
-      return resCode.returnResponseCode(res, 9999, apiName, null);
+      return resCode.returnResponseCode(res, 9999, apiName, null, null);
     } else {
-      return resCode.returnResponseCode(res, 0000, apiName, null);
+      return resCode.returnResponseCode(res, 0000, apiName, "filePath", req.body.path);
     }
 })
   
-
-//   router.get('/test2/:userId?', async (req, res) => {
+// 테스트
+// router.get('/stickode', async (req, res) => {
 //     console.log('req.params %o:', req.params);
-//     const apiName = 'test2 API';
-//     if (!req.params.userId) {
-//       console.log('userId 값 확인:', req.params.userId);
-//       return resCode.returnResponseCode(res, 9999, apiName);
-//     }
-//     return res.send('delete~~~');
+//   const apiName = 'test2 API';
+//   if (!req.params.userId) {
+//     console.log('userId 값 확인:', req.params.userId);
+//     return resCode.returnResponseCode(res, 9999, apiName);
+//   }
+//   return res.send('delete~~~');
 // });
 
   
@@ -212,51 +211,51 @@ router.post('/confirm/side/photo',
  * @route {DELETE} api/dog/model/userId
  */
 router.delete('/model/:userId?', async (req, res) => {
-  const apiName = '3D 모델 재성성을 위한 강아지삭제 API';
+  const apiName = '3D 모델 삭제';
   const userId = req.params.userId;
   console.log('userId 값 확인:', userId);
   if (!userId) {
-    return resCode.returnResponseCode(res, 1002, apiName, null);
+    return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
   
   // 반려견 재생성을 위해 DB에서 기존 강아지정보 삭제
   const list = await dogMngDB.deleteDogForRemake(userId); // 삭제할 파일 이름들
   console.log('~~list: %o', list); // err -> list:false
   if (!list) { 
-    return resCode.returnResponseCode(res, 1005, apiName, null);
+    return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } 
 
   // S3에서 사진 삭제하기
   const data = await dogMngDB.deleteDogImage(s3, list); 
   console.log('S3에서 사진 삭제하기 data:', data); 
   if (data == 0000) { // 파일 삭제 true OR false
-    return resCode.returnResponseCode(res, 0000, apiName, null);
+    return resCode.returnResponseCode(res, 0000, apiName, null, null);
 
   } else if (data == 1005) {
-    return resCode.returnResponseCode(res, 1005, apiName, null);
+    return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } 
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
-  resCode.returnResponseCode(res, 9999, apiName, null);
+  resCode.returnResponseCode(res, 9999, apiName, null, null);
 })
 
 
 /**
  * 반려견 정보 등록 API
- * @route {POST} api/member/dog
+ * @route {POST} api/dog/create
  */
 router.post('/create', async (req, res) => {
-  const apiName = '반려견 정보 등록 API';
+  const apiName = '반려견 정보 등록';
   console.log('req.body: %o', req.body);
-  if (!req.body.userId || !req.body.dogName || !req.body.breedName) {
-    return resCode.returnResponseCode(res, 1002, apiName, null);
+  if (!req.body.userId || !req.body.dogName) {
+    return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
   const rows = await dogMngDB.updateMemberInfo(req.body);
   console.log('rows: %o', rows);
   if (rows == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null);
+    return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else {
-    return resCode.returnResponseCode(res, 0000, apiName, rows); // insert_id 알고싶으면 null 대신 'rows' 넣기
+    return resCode.returnResponseCode(res, 0000, apiName, 'insert_id', rows); // insert_id 알고싶으면 null 대신 'rows' 넣기
   }
 })
 

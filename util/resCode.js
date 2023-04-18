@@ -4,16 +4,16 @@ function resCode() {
  * 에러코드로 응답을 받기 
  * 파라미터로 에러코드 넣으면 바로 json출력해주기
  */
-resCode.prototype.returnResponseCode = (res, value, apiName, subMessage) => { // subMessage:특별히 출력한 메세지가있는경우 기입, 없으면 null
-    console.log('returnResponseCode:', value+'/'+apiName+'/'+subMessage);
+resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessage) => { // subMessage:특별히 출력한 메세지가있는경우 기입, 없으면 null
+    console.log('returnResponseCode:', value+'/'+apiName+'/'+addField+'/'+subMessage);
     switch (value) {
-  
+      
       case 0000:
-        message = apiName+'를 성공했습니다'
-        if (subMessage) {
+        message = apiName + ' 성공' // ex) 3D 모델 재성성 성공
+        if (addField) {
           res.status(200).json({
             result: {
-              code: '0000', message: message, return: subMessage
+              code: '0000', message: message, [addField]: subMessage
             }
           });
         } else {
@@ -56,7 +56,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, subMessage) => { //
         if (subMessage) {
           message = subMessage
         } else {
-          message = apiName+'를 실패했습니다!' // ex) 3D 모델 재성성 API를 실패했습니다!
+          message = apiName+' 실패' // ex) 3D 모델 재성성 실패
         }
         res.json({
           result: {

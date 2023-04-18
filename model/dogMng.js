@@ -62,8 +62,7 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   console.log('deleteDogImage() 입장');
 
   // 버킷 정보
-  const item = list[0];
-  console.log('list66 :', list);
+  const item = list[0]; // 에러나면 여기 의심해보기(어쩔 때는 [0][0]여야되는 적이 있음)
   console.log('item66 :', item);
   if (item.fvFilename === null || item.svFilename === null || item.fvTxtFilename === null || item.svTxtFilename === null) {
     console.log('파일명 필수값 확인 item.fvFilename:', item.fvFilename);
@@ -83,7 +82,6 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   .then(([res1, res2]) => {
     console.log('반려견 사진삭제 성공');
     console.log('res1:', res1);
-    console.log('res2: %o', res2);
     return 0000; 
   })
   .catch(err => {
@@ -218,13 +216,12 @@ dogMng.prototype.selectDogInfo = (query) => {
 
 //반려견 정보 등록
 dogMng.prototype.updateMemberInfo = (query) => {
-
-  const sql = 'INSERT INTO DOG (dog_name, breed_type, user_id, created_date) VALUE (?, ?, ?, now())';  
+  const sql = 'INSERT INTO DOG (dog_name, user_id, created_date) VALUE (?, ?, now())';  
   // todo: created_date 컬럼에 값 추가해주기(now)
   return new Promise((resolve, reject) => {
     connection.query ( 
       sql, 
-      [query.dogName, query.breedName, query.userId],
+      [query.dogName, query.userId],
       (err, rows) => {
         if (err) {
           console.log(err)

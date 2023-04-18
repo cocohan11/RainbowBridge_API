@@ -54,21 +54,21 @@ router.get('/test', async (req, res) => {
  * @route {POST} api/member/leave
  */
 router.post('/leave', async (req, res) => {
-  const apiName = '회원탈퇴 정보변경 API';
+  const apiName = '회원탈퇴';
   console.log('req.body: %o', req.body);
 
   // 파라미터값 누락 확인
   if (!req.body.email|| !req.body.leaveReasonNum || !req.body.userId) { // POST는 비어있으면 다음과 같이 값을 넣어 반환 { email: 2, leaveReasonNum: 1, userId: 1 }
-    return resCode.returnResponseCode(res, 1002, apiName, null);
+    return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
   // DB에서 회원정보 UPDATE, 강아지정보 DELETE
   const list = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body); // 삭제할 사진이름 알아내기
   console.log('~~list: %o', list); // err -> rows:false
   if (list == 1005) { 
-    return resCode.returnResponseCode(res, 1005, apiName, null);
+    return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else if (list == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null);
+    return resCode.returnResponseCode(res, 9999, apiName, null, null);
   }
   
   // S3에서 사진 삭제하기
@@ -76,13 +76,13 @@ router.post('/leave', async (req, res) => {
   const data = await dogMngDB.deleteDogImage(s3, list); 
   console.log('S3에서 사진 삭제하기 data:', data); 
   if (data == 0000) { // 파일 삭제 true OR false
-    return resCode.returnResponseCode(res, 0000, apiName, null);
+    return resCode.returnResponseCode(res, 0000, apiName, null, null);
   } else if (data == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null);
+    return resCode.returnResponseCode(res, 9999, apiName, null, null);
   }
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
-  resCode.returnResponseCode(res, 9999, apiName, null);
+  resCode.returnResponseCode(res, 9999, apiName, null, null);
 })
 
 /**
@@ -91,21 +91,20 @@ router.post('/leave', async (req, res) => {
  * @desc 로그인에 사용
  */
 router.get('/:email?', async (req, res) => {
-  const apiName = '회원정보 조회 API';
+  const apiName = '회원정보 조회';
   const email = req.params.email;
   if (!email) {
-    return resCode.returnResponseCode(res, 1002, apiName, null);
+    return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
   const rows = await memberMngDB.selectMemberByEmail(email);
   console.log('rows[0]: %o', rows[0]);
   if (rows == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null);
+    return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else if (rows == 1005) {
-    return resCode.returnResponseCode(res, 1005, apiName, null);
+    return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else {
-    return resCode.returnResponseCode(res, 0000, apiName, rows[0]);
-    // res.json({'result': rows[0]})  // 수정하기 message에 해당 객체 출력하기
+    return resCode.returnResponseCode(res, 0000, apiName, 'rows', rows[0]);
   }
 })
 
@@ -115,20 +114,20 @@ router.get('/:email?', async (req, res) => {
  * @route {POST} api/member/join
  */
 router.post('/join', async (req, res) => {
-  const apiName = '회원정보 가입 API';
+  const apiName = '회원정보 가입';
   console.log('body %o:', req.body);
   if (!req.body.loginSNSType || !req.body.email) {
     console.log('loginSNSType %o:', req.body.loginSNSType);
     console.log('email %o:', req.body.email);
-    return resCode.returnResponseCode(res, 1002, apiName, null);
+    return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
   const rows = await memberMngDB.insertNewMember(req.body);
   console.log(`rows: ${rows}`);
   if (rows == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null);
+    return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else {
-    return resCode.returnResponseCode(res, 0000, apiName, null);
+    return resCode.returnResponseCode(res, 0000, apiName, null, null);
   }
 })
 
