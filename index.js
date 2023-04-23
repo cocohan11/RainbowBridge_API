@@ -104,6 +104,7 @@ app.use((err, req, res, next) => {
   }
 });
 
+app.use(express.static('policies')); // 정책조회 API (웹뷰로 조회)
 
 app.listen(port, () => {
   console.log(`rainbowBridge Dev app listening on port ${port}`)
