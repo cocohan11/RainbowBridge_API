@@ -59,15 +59,16 @@ dogMng.prototype.deleteDogForRemake = (userId) => {
 
 // 반려견 사진 4장 유무조회와 삭제하기 (일반 앞, 일반 옆, 텍스처 앞, 텍스처 옆) 
 dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리스트
-  console.log('deleteDogImage() 입장');
+  console.log('prototype.deleteDogImage() 입장');
 
   // 버킷 정보
   const item = list[0]; // 에러나면 여기 의심해보기(어쩔 때는 [0][0]여야되는 적이 있음)
-  console.log('item66 :', item);
+  console.log('item44 :', item);
   if (item.fvFilename === null || item.svFilename === null || item.fvTxtFilename === null || item.svTxtFilename === null) {
     console.log('파일명 필수값 확인 item.fvFilename:', item.fvFilename);
     return 1005; // 응답코드
   }
+  console.log('bucketPathList에 push할거임');
   let bucketPathList = [];
   bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${item.fvFilename}` })
   bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${item.svFilename}` })
@@ -75,60 +76,69 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.svTxtFilename}` })
 
 
-  return Promise.all([ // Promise.all:비동기. 모든 함수의 결과를 기다린 후 하나의 프로미스 객체를 반환
-    checkExists(bucketPathList),
-    deleteFiles(bucketPathList)
-  ])
-  .then(([res1, res2]) => {
-    console.log('반려견 사진삭제 성공');
-    console.log('res1:', res1);
-    return 0000; 
-  })
-  .catch(err => {
-    console.log('반려견 사진삭제 오류');
-    console.log('err:', err);
-    return 9999;
+  return new Promise((resolve, reject) => { // Promise.all() -> Promise()로 변경 // Promise.all:비동기. 모든 함수의 결과를 기다린 후 하나의 프로미스 객체를 반환
+  console.log('new Promise');
+  checkExists(bucketPathList) 
+    .then((res1) => { 
+      console.log('checkExists - res1 : %o', res1); 
+      return deleteFiles(bucketPathList); 
+    })
+    .then((res2) => {
+      console.log('deleteFiles - %o'); // {fvFilename, svFilename}
+      resolve (0000);
+    })
+    .catch((err) => {
+      console.log('err:'+err)
+      resolve (9999); 
+    });
   });
 
 
   function checkExists(bucketPathList) {
-    return new Promise((resolve, reject) => {
-      const promises = [];
-      bucketPathList.forEach((value, index, array) => {
-        console.log('forEach() value: %o', value);
+    console.log('checkExists() 입장');
+    const promises = [];
+    
+    bucketPathList.forEach((value, index, array) => {
+      console.log('forEach() value: %o', value);
+
+      // 1개씩 조회
+      promises.push(
+        new Promise((resolve, reject) => {
+          s3.headObject(value, function (err, exists_data) {
+            console.log('headObject() index: %o', index);
+            if (err) {
+              console.log(`File ${value.Key} does not exist.`);
+              reject(err);
+            } else {
+              console.log(`File ${value.Key} exists. checking...`);
   
-        // 1개씩 조회
-        promises.push(
-          new Promise((resolve, reject) => {
-            s3.headObject(value, function (err, exists_data) {
-              console.log('headObject() index: %o', index);
-              if (err) {
-                console.log(`File ${value.Key} does not exist.`);
-                reject(err);
+              if (exists_data == null) {
+                reject(new Error(`File ${value.Key} does not exist.`));
               } else {
-                console.log(`File ${value.Key} exists. checking...`);
                 resolve(exists_data);
               }
-              console.log('headObject() exists_data: %o', exists_data);
-            });
-          })
-        );
-      });
-      Promise.all(promises) // 비동기로 사진4개 조회되면 res객체 반환
+            }
+            console.log('headObject() exists_data: %o', exists_data);
+          });
+        })
+      );
+    });
+    
+    return Promise.all(promises)
       .then((res) => {
         console.log('All files exist. Deleting...');
-        resolve(res);
+        return res;
       })
       .catch((err) => {
         console.log('File does not exist. Cannot delete.');
-        reject(err);
+        throw err;
       });
-    });
   }
+
 
   // 여러 오브젝트 삭제
   function deleteFiles(bucketPathList) {
-    console.log('deleteFiles() 입장 Bucket', bucketPathList[0].Bucket);
+    console.log('deleteFiles() 입장 Bucket:', bucketPathList[0].Bucket);
     return new Promise((resolve, reject) => {
       
       Promise.all([

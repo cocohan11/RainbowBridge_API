@@ -73,13 +73,16 @@ router.post('/leave', async (req, res) => {
   
   // S3에서 사진 삭제하기
   console.log('list:', list); 
-  const data = await dogMngDB.deleteDogImage(s3, list); 
-  console.log('S3에서 사진 삭제하기 data:', data); 
-  if (data == 0000) { // 파일 삭제 true OR false
-    return resCode.returnResponseCode(res, 0000, apiName, null, null);
-  } else if (data == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null, null);
+  if (list[0] != null ) {
+    const data = await dogMngDB.deleteDogImage(s3, list); 
+    console.log('S3에서 사진 삭제하기 data:', data); 
+    if (data == 0000) { // 파일 삭제 true OR false
+      return resCode.returnResponseCode(res, 0000, apiName, null, null);
+    } else if (data == 9999) {
+      return resCode.returnResponseCode(res, 9999, apiName, null, null);
+    }
   }
+  
 
   console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
   resCode.returnResponseCode(res, 9999, apiName, null, null);
