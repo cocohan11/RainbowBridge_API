@@ -138,7 +138,7 @@ memberMng.prototype.selectMemberByEmail = (query) => {
           return resolve(1005);
         }
         if (rows.length == 1) {
-          return resolve(rows);
+          return resolve(camelcaseKeys(rows));
         } else {
           return resolve(1005);
         }
