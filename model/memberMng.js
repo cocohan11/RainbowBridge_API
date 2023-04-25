@@ -140,7 +140,7 @@ memberMng.prototype.selectMemberByEmail = (query) => {
         if (rows.length == 1) {
           return resolve(rows);
         } else {
-          return resolve(9999);
+          return resolve(1005);
         }
       }
     })

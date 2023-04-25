@@ -10,12 +10,20 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
       
       case 0000:
         message = apiName + ' 성공' // ex) 3D 모델 재성성 성공
-        if (addField) {
+        if (addField == 'addToResult') {
+          let result = {
+            code: '0000',
+            message: message
+          };
+          // 속성으로 감싸지않고 기존result에 row추가해주기
+          for (let key in subMessage) { // list에서 key에 해당하는 이름과 이름의 속성 값을 result에 추가
+            result[key] = subMessage[key];
+          }
+          console.log('result:', result);
           res.status(200).json({
-            result: {
-              code: '0000', message: message, [addField]: subMessage
-            }
+            result: result
           });
+          
         } else {
           res.status(200).json({
             result: {

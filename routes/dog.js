@@ -153,7 +153,8 @@ router.post('/confirm/front/photo',
     if (rows == 9999) {
       return resCode.returnResponseCode(res, 9999, apiName, null, null);
     } else {
-      return resCode.returnResponseCode(res, 0000, apiName, "filePath", req.body.path);
+      const plusResult = { filePath: req.body.path }; // 원하는 출력 모양을 만듦
+      return resCode.returnResponseCode(res, 0000, apiName, "addToResult", plusResult); 
     }
 })
 
@@ -171,8 +172,8 @@ router.post('/confirm/side/photo',
     const apiName = '반려견 정보 등록';
     console.log('api 호출');
     if (!req.file || !req.body.dogId || !req.body.type) {
+      console.log(`file:${req.file}, dogId:${req.body.dogId}, type:${req.body.type}`);
       return resCode.returnResponseCode(res, 1002, apiName, null, null); 
-      console.log('필수값 없음');
     }
 
     //클라이언트로부터 이미지 파일을 전달받는다. 
@@ -190,7 +191,8 @@ router.post('/confirm/side/photo',
     if (rows == 9999) {
       return resCode.returnResponseCode(res, 9999, apiName, null, null);
     } else {
-      return resCode.returnResponseCode(res, 0000, apiName, "filePath", req.body.path);
+      const plusResult = { filePath: req.body.path }; 
+      return resCode.returnResponseCode(res, 0000, apiName, "addToResult", plusResult); 
     }
 })
   
@@ -255,7 +257,8 @@ router.post('/create', async (req, res) => {
   if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else {
-    return resCode.returnResponseCode(res, 0000, apiName, 'insert_id', rows); // insert_id 알고싶으면 null 대신 'rows' 넣기
+    const plusResult = { insert_id: rows }; // 원하는 출력 모양을 만듦
+    return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // insert_id 알고싶으면 null 대신 'addToResult' 넣기
   }
 })
 
