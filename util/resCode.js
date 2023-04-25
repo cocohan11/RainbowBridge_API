@@ -40,7 +40,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
         } else {
           message = '필수파라미터가 누락되어있습니다!'
         }
-        res.status(200).json({
+        res.status(41).json({
           result: {
             code: '1002', message
           }
@@ -53,7 +53,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
         } else {
           message = '해당되는 정보가 없습니다!' 
         }
-        res.status(404).json({
+        res.status(200).json({
           result: {
             code: '1005', message
           }
@@ -66,7 +66,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
         } else {
           message = apiName+' 실패' // ex) 3D 모델 재성성 실패
         }
-        res.json({
+        res.status(500).json({
           result: {
             code: '9999', message : message
           }
