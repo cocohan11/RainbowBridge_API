@@ -35,7 +35,7 @@ function mySQLQuery(query) {
                   return reject(err);
               } else {
                   //순차적으로 실행하면 반환되는 행을 관리
-                  return resolve(camelcaseKeys(rows));
+                  return resolve(camelcaseKeys(rows)); //카멜케이스로 응답해달라는 요구받음
               }
           });
       } catch (err) {
@@ -124,7 +124,13 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
 
 //DB에서 회원정보 SELECT
 memberMng.prototype.selectMemberByEmail = (query) => {
-  const sql = `SELECT * FROM MEMBER WHERE user_email = ?`;
+  const sql = `SELECT *, EXISTS (
+                  SELECT 1
+                  FROM DOG d
+                  WHERE d.user_id = m.user_id
+                ) as isModelCreated
+                FROM MEMBER m
+                WHERE user_email = ?`;
   
   return new Promise((resolve, reject) => {
     connection.query(sql, [query], (err, rows) => {
