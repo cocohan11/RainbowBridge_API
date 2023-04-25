@@ -40,7 +40,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
         } else {
           message = '필수파라미터가 누락되어있습니다!'
         }
-        res.status(400).json({
+        res.status(401).json({
           result: {
             code: '1002', message
           }
