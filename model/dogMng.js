@@ -176,6 +176,7 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
 
 //반려견 앞모습, 옆모습사진 파일명, S3 파일경로 DB에 저장
 dogMng.prototype.insertDogPhoto = (query) => {
+  console.log('반려견 앞모습, 옆모습사진 파일명:', query);
   
   let sql;
   if (query.type === 'front') { //앞모습 사진을 처리하는 쿼리문
@@ -225,7 +226,7 @@ dogMng.prototype.selectDogInfo = (query) => {
 
 
 //반려견 정보 등록
-dogMng.prototype.updateMemberInfo = (query) => {
+dogMng.prototype.insertDogInfo = (query) => {
   const sql = 'INSERT INTO DOG (dog_name, user_id, created_date) VALUE (?, ?, now())';  
   // todo: created_date 컬럼에 값 추가해주기(now)
   return new Promise((resolve, reject) => {
