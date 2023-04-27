@@ -147,6 +147,7 @@ router.post('/confirm/front/photo',
     //DB에 새로운 파일명과 S3 파일 저장경로 저장
     req.body.filename = newFilename
     req.body.path = file.location
+    console.log('req.body.filename 값 확인 >>> ', req.body.filename); // :168113book.jpeg
     console.log('req.body.path 값 확인 >>> ', req.body.path);
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
@@ -252,7 +253,7 @@ router.post('/create', async (req, res) => {
   if (!req.body.userId || !req.body.dogName) {
     return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
-  const rows = await dogMngDB.updateMemberInfo(req.body);
+  const rows = await dogMngDB.insertDogInfo(req.body);
   console.log('rows: %o', rows);
   if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
