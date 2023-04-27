@@ -130,7 +130,8 @@ router.post('/join', async (req, res) => {
   if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else {
-    return resCode.returnResponseCode(res, 0000, apiName, null, null);
+    const plusResult = { user_id: rows }; // 원하는 출력 모양을 만듦
+    return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // user_id 알고싶으면 null 대신 'addToResult' 넣기
   }
 })
 
