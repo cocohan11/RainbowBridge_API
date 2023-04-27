@@ -129,24 +129,26 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
                 ON DOG.user_id = MEMBER.user_id
                 WHERE user_email = ?`;
 
-  // S3에서 해당 파일이 있는지 조회하기
     return new Promise((resolve, reject) => {
-      connection.query(sql, [query], (err, rows) => {
+      connection.query(sql, [query], (err, rows) => { // 이메일로 파일명 알아내기
         console.log('try rows: %o', rows);
-        
+
+        // 파일명이 없다면 모델이생긴적없다고 리턴
         if (rows[0].fv_filename == '' || rows[0].sv_filename == '') {
-          dd(0) // 모델이 생성된 적 없다. 
+          getMemberInfo(0) // 회원정보+모델이 생성된 적 없다. 
             .then(res => { resolve(res); })
             .catch(error => { reject(error); });
         } else {
-          // S3에서 조회
-          // S3에 없는 파일명이면 1005
-          // 정상이면 0000 (기타에러 9999)
+          /** 
+            S3에서 해당 파일이 있는지 조회하기
+            S3에 없는 파일명이면 1005
+            정상이면 0000 (기타에러 9999)
+          */ 
           checkExists(s3, rows[0]) // 동기처리
             .then(res => {
               console.log('res:', res);
               if (res == 0000) {  
-                dd(1) // 모델이 생성된 적 있고, s3에도 존재O
+                getMemberInfo(1) // 회원정보+모델이 생성된 적 있고, s3에도 존재O
                   .then(res => { resolve(res); })
                   .catch(error => { reject(error); });
               } else if (res == 1005) { // 모델이 생성된 적 있고, s3에 존재X. 
@@ -160,7 +162,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
       });
     });
   
-  function dd(isModelCreated) {
+  function getMemberInfo(isModelCreated) {
     const sql_2 = `SELECT *, ? as isModelCreated
     FROM MEMBER
     WHERE user_email = ?`;
