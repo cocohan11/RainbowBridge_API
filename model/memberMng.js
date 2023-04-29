@@ -100,8 +100,8 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
 
   return new Promise((resolve, reject) => {
     mySQLQuery(updateMemberInfo) // 쿼리1 실행
-    .then((res1) => { // res:mySQLQuery의 결과
-      console.log('res1 : %o', res1); // 쿼리2 실행
+    .then((res1) => { // res:mySQLQuery의 결과 
+      console.log('res1 : %o', res1);
       console.log('res1 changedRows: %o', res1.changedRows); // 쿼리2 실행
       if (res1.changedRows == 1) { // 수정) changedRows값이 0이 아닌걸로 조건문 수정하기
         return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
@@ -111,8 +111,14 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
       }
     })
     .then((res2) => {
-      console.log('res2 ㅡㅡ : %o', res2); // {fvFilename, svFilename}
-      return resolve([res2[0][0]]);
+      console.log('res2 ㅡㅡ : %o', res2); // {fvFilename, svFilename ..} 
+      console.log('res2[0][0]!! ㅡㅡ : %o', res2[0][0]); // {fvFilename, svFilename ..}
+      if (res2[0][0] == undefined) { // 반려견등록을 한 번도 한 전 없다면 undefined가 뜸 -> 0000
+        console.log('undefined 나옴'); 
+        return resolve('undefined');
+      } else {
+        return resolve([res2[0][0]]);
+      }
     })
     .catch((err) => {
       console.log('err:'+err)
@@ -164,7 +170,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
               .catch(err => { reject(err); });
           }
         } else {
-          resolve(9999);
+          resolve(1005);
         }
       });
     });
