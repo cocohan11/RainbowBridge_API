@@ -124,40 +124,47 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
 
 //DB에서 회원정보 SELECT
 memberMng.prototype.selectMemberByEmail = async (s3, query) => {
-  const sql = `SELECT fv_filename, sv_filename FROM DOG
+  const sql = `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename
+                FROM DOG
                 left join MEMBER
                 ON DOG.user_id = MEMBER.user_id
                 WHERE user_email = ?`;
 
     return new Promise((resolve, reject) => {
       connection.query(sql, [query], (err, rows) => { // 이메일로 파일명 알아내기
-        console.log('try rows: %o', rows);
+        console.log('try rows: %o', rows[0]);
 
         // 파일명이 없다면 모델이생긴적없다고 리턴
-        if (rows[0].fv_filename == '' || rows[0].sv_filename == '') {
-          getMemberInfo(0) // 회원정보+모델이 생성된 적 없다. 
-            .then(res => { resolve(res); })
-            .catch(error => { reject(error); });
-        } else {
-          /** 
-            S3에서 해당 파일이 있는지 조회하기
-            S3에 없는 파일명이면 1005
-            정상이면 0000 (기타에러 9999)
-          */ 
-          checkExists(s3, rows[0]) // 동기처리
-            .then(res => {
-              console.log('res:', res);
-              if (res == 0000) {  
-                getMemberInfo(1) // 회원정보+모델이 생성된 적 있고, s3에도 존재O
+        if (rows[0] != undefined) {
+          if (rows[0].fv_filename == '' || rows[0].sv_filename == '' || rows[0].fv_txt_filename == '' || rows[0].sv_txt_filename == '') {
+            getMemberInfo(0) // 회원정보+모델이 생성된 적 없다. 
+              .then(res => { resolve(res); })
+              .catch(error => { reject(error); });
+          } else {
+            /** 
+              S3에서 해당 파일이 있는지 조회하기
+              S3에 없는 파일명이면 0000인데 isModelCreated=0
+              정상이면 0000 (기타에러 9999)
+            */ 
+            checkExists(s3, rows[0]) // 동기처리
+              .then(res => {
+                console.log('res:', res);
+                if (res == 0000) {  
+                  getMemberInfo(1) // 회원정보+모델이 생성된 적 있고, s3에도 존재O
+                    .then(res => { resolve(res); })
+                    .catch(error => { reject(error); });
+                } else if (res == 1005) { // 모델이 생성된 적 있고, s3에 존재X.
+                  getMemberInfo(0) 
                   .then(res => { resolve(res); })
                   .catch(error => { reject(error); });
-              } else if (res == 1005) { // 모델이 생성된 적 있고, s3에 존재X. 
-                resolve(1005);
-              } else {
-                resolve(9999);
-              }
-            })
-            .catch(err => { reject(err); });
+                } else {
+                  resolve(9999);
+                }
+              })
+              .catch(err => { reject(err); });
+          }
+        } else {
+          resolve(9999);
         }
       });
     });
@@ -214,6 +221,8 @@ async function checkExists(s3, item) { // 수정예정
   let bucketPathList = [];
   bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${item.fv_filename}` })
   bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${item.sv_filename}` })
+  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.fv_txt_filename}` })
+  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.sv_txt_filename}` })
 
   const promises = [];
   bucketPathList.forEach((value, index, array) => {

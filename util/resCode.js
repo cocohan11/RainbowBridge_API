@@ -51,7 +51,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
         if (subMessage) {
           message = subMessage
         } else {
-          message = '해당되는 정보가 없습니다!' 
+          message = '해당되는 정보를 조회할 수 없습니다!' 
         }
         res.status(200).json({
           result: {
