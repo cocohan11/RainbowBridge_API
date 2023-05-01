@@ -211,12 +211,13 @@ dogMng.prototype.insertDogPhoto = (query) => {
           console.log('에러다~~!!~!~!')
           return resolve(9999);
         } else {
-          console.log('ㅇㅇㅇ:', rows);
-          if (rows.changedRows == 1) { // changedRows : 0 update한게없음
+          console.log('ㅇㅇㅇ:', rows); 
             return resolve(rows);
-          } else {
-            return resolve('undefined');
-          }
+          // if (rows.changedRows == 1) { // changedRows : 0 update한게없음
+          //   return resolve(rows);
+          // } else {
+          //   return resolve('undefined'); // 중복막는거 해제함...
+          // }
       }
     })
   })
