@@ -216,7 +216,7 @@ dogMng.prototype.insertDogPhoto = (query) => {
           // if (rows.changedRows == 1) { // changedRows : 0 update한게없음
           //   return resolve(rows);
           // } else {
-          //   return resolve('undefined'); // 중복막는거 해제함...
+          //   return resolve('undefined'); // 중복막는거 임시주석...
           // }
       }
     })
