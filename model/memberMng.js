@@ -129,73 +129,109 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
 
 
 //DB에서 회원정보 SELECT
-//테스트하느라 수정했음. 나도 테스트다시해보기//rows[0]->row로 변경했음
 memberMng.prototype.selectMemberByEmail = async (s3, query) => {
-  const sql = `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename
-                FROM DOG
-                left join MEMBER
-                ON DOG.user_id = MEMBER.user_id
-                WHERE user_email = ?`;
+  const sql = `SELECT * FROM MEMBER 
+               WHERE user_email = ?;`;
 
     return new Promise((resolve, reject) => {
       connection.query(sql, [query], (err, rows) => { // 이메일로 파일명 알아내기
         console.log('try rows: %o', rows[0]);
 
         // 파일명이 없다면 모델이생긴적없다고 리턴
-        if (rows[0] != undefined) {
-          if (rows[0].fv_filename == '' || rows[0].sv_filename == '' || rows[0].fv_txt_filename == '' || rows[0].sv_txt_filename == '') {
-            getMemberInfo(0) // 회원정보+모델이 생성된 적 없다. 
-              .then(res => { resolve(res); })
-              .catch(error => { reject(error); });
-          } else {
-            /** 
-              S3에서 해당 파일이 있는지 조회하기
-              S3에 없는 파일명이면 0000인데 isModelCreated=0
-              정상이면 0000 (기타에러 9999)
-            */ 
-            checkExists(s3, rows[0]) // 동기처리
-              .then(res => {
-                console.log('res:', res);
-                if (res == 0000) {  
-                  getMemberInfo(1) // 회원정보+모델이 생성된 적 있고, s3에도 존재O
+        if (rows[0] == undefined) { // 이멜없음
+          console.log('이멜없다');
+          resolve(1005);
+
+        } else {
+          console.log('이멜있다. 모델생성한적있는가');
+          console.log('rows[0].fv_filename', rows[0].fv_filename);
+          const sql_2 = `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename
+                        FROM DOG
+                        left join MEMBER
+                        ON DOG.user_id = MEMBER.user_id
+                        WHERE user_email = ?`;
+
+            if (rows[0].fv_filename == undefined || rows[0].sv_filename == undefined || rows[0].fv_txt_filename == undefined || rows[0].sv_txt_filename == undefined) {
+              console.log('모델이 생성된 적 없다. 1');
+              getMemberInfo(0) // 회원정보+모델이 생성된 적 없다.             
+                .then(res => {
+                  console.log('모델이 생성된 적 없다.2 ');
+                  resolve(res);
+                })
+                .catch(error => {
+                  reject(error);
+                });
+            } else {
+              /** 
+                S3에서 해당 파일이 있는지 조회하기
+                S3에 없는 파일명이면 0000인데 isModelCreated=0
+                정상이면 0000 (기타에러 9999)
+              */ 
+              checkExists(s3, rows[0]) // 동기처리
+                .then(res => {
+                  console.log('res:', res);
+                  if (res == 0000) {  
+                    getMemberInfo(1) // 회원정보+모델이 생성된 적 있고, s3에도 존재O
+                      .then(res => { resolve(res); })
+                      .catch(error => { reject(error); });
+                  } else if (res == 1005) { // 모델이 생성된 적 있고, s3에 존재X.
+                    getMemberInfo(0) 
                     .then(res => { resolve(res); })
                     .catch(error => { reject(error); });
-                } else if (res == 1005) { // 모델이 생성된 적 있고, s3에 존재X.
-                  getMemberInfo(0) 
-                  .then(res => { resolve(res); })
-                  .catch(error => { reject(error); });
-                } else {
-                  resolve(9999);
-                }
-              })
-              .catch(err => { reject(err); });
+                  } else {
+                    resolve(9999);
+                  }
+                })
+                .catch(err => { reject(err);  });
           }
-        } else {
-          resolve(1005);
+          
+
+          const rows_2 = new Promise((resolve, reject) => {
+            connection.query(sql_2, [query], (err, rows) => {
+              console.log('try rows_2 : %o', rows);
+              if (err) {
+                console.log('err,', err)
+                resolve(9999);
+              } else {
+                if (!rows) resolve(1005);
+                  console.log('camelcaseKeys(rows),', camelcaseKeys(rows))
+                  return resolve(camelcaseKeys(rows));
+                // if (rows.length == 1) { //중복제한 임시주석
+                //   resolve(camelcaseKeys(rows));
+                // } else {
+                //   resolve(1005);
+                // }
+              }
+            });
+          });
         }
       });
     });
   
-  function getMemberInfo(isModelCreated) {
+  async function getMemberInfo(isModelCreated) {
+    console.log('getMemberInfo()입장', isModelCreated);
     const sql_2 = `SELECT *, ? as isModelCreated
-    FROM MEMBER
-    WHERE user_email = ?`;
-    const rows_2 = new Promise((resolve, reject) => {
+                    FROM MEMBER
+                    WHERE user_email = ?`;
+    const rows_2 = await new Promise((resolve, reject) => {
       connection.query(sql_2, [isModelCreated, query], (err, rows) => {
-        console.log('try rows_2: %o', rows);
+        console.log('try rows_2 : %o', rows);
         if (err) {
           console.log('err,', err)
           resolve(9999);
         } else {
           if (!rows) resolve(1005);
-          if (rows.length == 1) {
-            resolve(camelcaseKeys(rows));
-          } else {
-            resolve(1005);
-          }
+            console.log('camelcaseKeys(rows),', camelcaseKeys(rows))
+            return resolve(camelcaseKeys(rows));
+          // if (rows.length == 1) { //중복제한 임시주석
+          //   resolve(camelcaseKeys(rows));
+          // } else {
+          //   resolve(1005);
+          // }
         }
       });
     });
+    console.log('camelcaseKeys(rows) 다 들어가있는지 확인2,', rows_2)
     return rows_2; // 응답코드뿐만 아니라 회원정보까지 Promise로 리턴
   }
 };

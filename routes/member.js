@@ -105,13 +105,15 @@ router.get('/:email?', async (req, res) => {
   }
 
   const rows = await memberMngDB.selectMemberByEmail(s3, email);
-  console.log('rows[0]: %o', rows[0]);
+  // console.log('rows[0]: %o', rows[0]); // 중복제거 임시주석
+  console.log('rows: %o', rows);
   if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else if (rows == 1005) {
     return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else {
-    return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows[0]); // key:value형태의 값을 파라미터로 보낸다
+    return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows); // key:value형태의 값을 파라미터로 보낸다
+    // return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows[0]); // 임시주석
   }
 })
 
