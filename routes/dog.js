@@ -132,7 +132,7 @@ router.post('/confirm/front/photo',
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
       return resCode.returnResponseCode(res, 9999, apiName, null, null);
-    } else if (rows == 'undefined') {
+    } else if (rows == 'undefined') { // 주석해둬서 이쪽으로 올 일이 없음
       return resCode.returnResponseCode(res, 1005, apiName, null, null);
     } else {
       const plusResult = { filePath: req.body.path }; // 원하는 출력 모양을 만듦

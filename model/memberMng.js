@@ -129,6 +129,7 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
 
 
 //DB에서 회원정보 SELECT
+//테스트하느라 수정했음. 나도 테스트다시해보기//rows[0]->row로 변경했음
 memberMng.prototype.selectMemberByEmail = async (s3, query) => {
   const sql = `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename
                 FROM DOG
