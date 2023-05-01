@@ -49,33 +49,26 @@ const frontImageUploader = multer({
     s3: s3,
     bucket: 'user-input-photo/front', //생성할 버킷 디렉토리
     key: (req, file, callback) => {
-      //업로드할 디렉토리를 설정하기 위한 코드. 없어도 무관
-      //const uploadDirectory = req.query.directory ?? ''
-      
-      //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-      let newFilename = `${file.originalname}.jpeg`
+
+      console.log('frontImageUploader 호출');
+      const newFilename = `${Date.now()}_${file.originalname}.jpeg`; // 
+      req.body.filename = newFilename; // 파일 이름을 req.body.filename에 저장
       console.log(`newFilename: ${newFilename}`);
-      
+      callback(null, newFilename); // 파일 이름 반환
+
       //extname = 경로의 마지막 '.'에서 마지막 부분의 문자열 끝까지의 확장을 반환합니다. 
       // 경로의 마지막 부분에 '.'가 없거나 경로의 첫 번째 문자가 '.'인 경우 빈 문자열을 반환합니다.
       const extenstion  = path.extname(newFilename)
       console.error(`extenstion : ${extenstion}`);
-
       //extion을 확인하기 위한 코드로 없어도 무관함. 허용되지 않는 확장자면 에러발생됨.
       if (!allowedExtensions.includes(extenstion)) {
         console.error('frontImageUploader error: 파일의 확장자가 없습니다.')
         //23.4.13 위) next함수를 써서 에러핸들링 되도록 시도했지만 실패
         //next란, next(err)는 현재 미들웨어에서 발생한 에러를 다음 미들웨어에 전달하는 역할
         //next 함수를 호출해 인자로 전달되는 에러객체를 app.use에 정의한 에러핸들러의 매개변수로 전달한다
-
         //@todo) 동작하지 않아서 수정필요
         return callback(new CommonError('파일의 확장자가 없습니다'))
       }
-
-      //원래코드
-      //callback(null, `${uploadDirectory}/${Date.now()}_${file.originalname}`) 
-      //업로드 기능(null, '업로드경로')
-      callback(null, `${Date.now()}_${newFilename}`)
     },
     ContentType: multerS3.AUTO_CONTENT_TYPE,
     acl: 'public-read-write' //권한 관련 설정
@@ -91,29 +84,20 @@ const sideImageUploader = multer({
     key: (req, file, callback) => {
 
       console.log('sideImageUploade 호출');
-
-
-      //const uploadDirectory = req.query.directory ?? '' //업로드할 디렉토리를 설정하기 위한 코드. 없어도 무관
-      
-      //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-      let newFilename = `${file.originalname}.jpeg`
-      console.log('newFilename:', newFilename);
+      const newFilename = `${Date.now()}_${file.originalname}.jpeg`; //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
+      req.body.filename = newFilename; // 파일 이름을 req.body.filename에 저장
+      console.log(`newFilename: ${newFilename}`);
+      callback(null, newFilename); // 파일 이름 반환
 
       //extname = 경로의 마지막 '.'에서 마지막 부분의 문자열 끝까지의 확장을 반환합니다. 경로의 마지막 부분에 '.'가 없거나 경로의 첫 번째 문자가 '.'인 경우 빈 문자열을 반환합니다.
       const extenstion  = path.extname(newFilename)
       console.error(`extenstion : ${extenstion}`);
       console.log('extenstion:', extenstion);
-
       if (!allowedExtensions.includes(extenstion)) { //extion을 확인하기 위한 코드로 없어도 무관함. 허용되지 않는 확장자면 에러발생됨.
         console.error('파일의 확장자가 없습니다.');
         return callback(new Error('wrong extenstion'))
       }
       console.log('S3 업로드 실행');
-
-      //원래코드
-      //callback(null, `${uploadDirectory}/${Date.now()}_${file.originalname}`) //업로드 기능(null, '업로드경로')
-      //변경코드
-      callback(null, `${Date.now()}_${newFilename}`)
     },
     ContentType: multerS3.AUTO_CONTENT_TYPE,
     acl: 'public-read-write' //권한 관련 설정
@@ -139,20 +123,17 @@ router.post('/confirm/front/photo',
     
     //클라이언트로부터 이미지 파일을 전달받는다.
     const file = req.file;
-    console.log('file값 확장자 확인: %o', file.originalname)
+    console.log('file값 확장자와 날짜들어간 이름 확인: %o', req.body.filename)
 
-    //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-    let newFilename = `${file.originalname}.jpeg` // 테스트할 때 출력:71670370.jpeg.jpeg
-    
-    //DB에 새로운 파일명과 S3 파일 저장경로 저장
-    req.body.filename = newFilename
     req.body.path = file.location
-    console.log('req.body.filename 값 확인 >>> ', req.body.filename); // :168113book.jpeg
+    console.log('req.body.filename 값 확인 >>> ', req.body.filename); // '1682763409672_168113book.jpeg'
     console.log('req.body.path 값 확인 >>> ', req.body.path);
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
       return resCode.returnResponseCode(res, 9999, apiName, null, null);
+    } else if (rows == 'undefined') {
+      return resCode.returnResponseCode(res, 1005, apiName, null, null);
     } else {
       const plusResult = { filePath: req.body.path }; // 원하는 출력 모양을 만듦
       return resCode.returnResponseCode(res, 0000, apiName, "addToResult", plusResult); 
@@ -177,22 +158,21 @@ router.post('/confirm/side/photo',
       return resCode.returnResponseCode(res, 1002, apiName, null, null); 
     }
 
-    //클라이언트로부터 이미지 파일을 전달받는다. 
+    //클라이언트로부터 이미지 파일을 전달받는다.
     const file = req.file;
-    console.log('file값 확장자 확인: %o', file.originalname)
-    //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
-    let newFilename = `${file.originalname}.jpeg`
-    
-    //DB에 파일명과 S3 파일 저장경로 저장
-    req.body.filename = newFilename
+    console.log('file값 확장자와 날짜들어간 이름 확인: %o', req.body.filename)
+
     req.body.path = file.location
+    console.log('req.body.filename 값 확인 >>> ', req.body.filename); // '1682763409672_168113book.jpeg'
     console.log('req.body.path 값 확인 >>> ', req.body.path);
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
       return resCode.returnResponseCode(res, 9999, apiName, null, null);
+    } else if (rows == 'undefined') {
+      return resCode.returnResponseCode(res, 1005, apiName, null, null);
     } else {
-      const plusResult = { filePath: req.body.path }; 
+      const plusResult = { filePath: req.body.path }; // 원하는 출력 모양을 만듦
       return resCode.returnResponseCode(res, 0000, apiName, "addToResult", plusResult); 
     }
 })

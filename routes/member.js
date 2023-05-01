@@ -65,10 +65,12 @@ router.post('/leave', async (req, res) => {
   // DB에서 회원정보 UPDATE, 강아지정보 DELETE
   const list = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body); // 삭제할 사진이름 알아내기
   console.log('~~list: %o', list); // err -> rows:false
-  if (list == 1005) { 
+  if (list == 1005) {
     return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else if (list == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
+  } else if (list == 'undefined') { // 반려견등록을 한 번도 한 전 없다면 undefined가 뜸 -> 0000
+    return resCode.returnResponseCode(res, 0000, apiName, null, null);
   }
   
   // S3에서 사진 삭제하기
@@ -80,6 +82,8 @@ router.post('/leave', async (req, res) => {
       return resCode.returnResponseCode(res, 0000, apiName, null, null);
     } else if (data == 9999) {
       return resCode.returnResponseCode(res, 9999, apiName, null, null);
+    } else if (data == 9999) {
+      return resCode.returnResponseCode(res, 1005, apiName, null, null);
     }
   }
   
