@@ -143,6 +143,22 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   function deleteFiles(bucketPathList) {
     console.log('deleteFiles() 입장 Bucket:', bucketPathList);
     console.log('deleteFiles() 입장 Bucket:', bucketPathList[0].Bucket);
+
+    params = {
+          Bucket: bucketPathList[idx1].Bucket, 
+          Delete: {
+           Objects: [
+            {
+              Key: bucketPathList[idx1].Key
+            }, 
+            {
+              Key: bucketPathList[idx2].Key 
+            }
+           ], 
+           Quiet: false // (참고) Delete API 요청에 대한 응답에 삭제 작업의 성공/실패 여부와 관련된 정보
+          }
+        };
+      
     return new Promise((resolve, reject) => {
       
       Promise.all([
@@ -212,12 +228,11 @@ dogMng.prototype.insertDogPhoto = (query) => {
           return resolve(9999);
         } else {
           console.log('ㅇㅇㅇ:', rows); 
+          if (rows.changedRows == 1) { // changedRows : 0 update한게없음
             return resolve(rows);
-          // if (rows.changedRows == 1) { // changedRows : 0 update한게없음
-          //   return resolve(rows);
-          // } else {
-          //   return resolve('undefined'); // 중복막는거 임시주석...
-          // }
+          } else {
+            return resolve('undefined');
+          }
       }
     })
   })
