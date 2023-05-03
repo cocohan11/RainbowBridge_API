@@ -156,7 +156,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
               getMemberInfo(0) // 회원정보+모델이 생성된 적 없다.             
                 .then(res => {
                   console.log('모델이 생성된 적 없다.2 ');
-                  resolve(res);
+                  resolve(res[0]);
                 })
                 .catch(error => {
                   reject(error);
