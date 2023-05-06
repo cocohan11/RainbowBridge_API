@@ -129,105 +129,148 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
 
 
 //DB에서 회원정보 SELECT
-memberMng.prototype.selectMemberByEmail = async (s3, query) => {
-  const sql = `SELECT * FROM MEMBER 
-               WHERE user_email = ?;`;
+memberMng.prototype.selectMemberByEmail = async (s3, query) => { 
 
-    return new Promise((resolve, reject) => {
-      connection.query(sql, [query], (err, rows) => { // 이메일로 파일명 알아내기
-        console.log('try rows: %o', rows[0]);
+  let user_id = 0;
+  function selectMemberInfo(query) {
+    return {
+      text: `SELECT * FROM MEMBER 
+             WHERE user_email = ? `, 
+      params: [query] 
+    };
+  }
+  function selectS3fileName(user_id) {
+    return {
+      text: `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename
+              FROM DOG
+              left join MEMBER
+              ON DOG.user_id = MEMBER.user_id
+              WHERE DOG.user_id = ?
+              ORDER BY dog_id DESC
+			        LIMIT 1`, // 중복때문에 추가했지만 있어도 상관없음
+      params : [user_id] 
+    };
+  }
 
-        // 파일명이 없다면 모델이생긴적없다고 리턴
-        if (rows[0] == undefined) { // 이멜없음
-          console.log('이멜없다');
-          resolve(1005);
+  // 해당이메일의 사용자가 존재하는지, 사용자의 강아지가 존재하는지 확인
+  return new Promise((resolve, reject) => {
+    mySQLQuery(selectMemberInfo(query)) // 쿼리1 실행
+    .then((res1) => { // res:mySQLQuery의 결과 
+      console.log('res11 : %o', res1);
+      console.log('res11 length : %o', res1.length);
 
-        } else {
-          console.log('이멜있다. 모델생성한적있는가');
-          console.log('rows[0].fv_filename', rows[0].fv_filename);
-          const sql_2 = `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename
-                        FROM DOG
-                        left join MEMBER
-                        ON DOG.user_id = MEMBER.user_id
-                        WHERE user_email = ?`;
-
-            if (rows[0].fv_filename == undefined || rows[0].sv_filename == undefined || rows[0].fv_txt_filename == undefined || rows[0].sv_txt_filename == undefined) {
-              console.log('모델이 생성된 적 없다. 1');
-              getMemberInfo(0) // 회원정보+모델이 생성된 적 없다.             
-                .then(res => {
-                  console.log('모델이 생성된 적 없다.2 ');
-                  resolve(res[0]);
-                })
-                .catch(error => {
-                  reject(error);
-                });
-            } else {
-              /** 
-                S3에서 해당 파일이 있는지 조회하기
-                S3에 없는 파일명이면 0000인데 isModelCreated=0
-                정상이면 0000 (기타에러 9999)
-              */ 
-              checkExists(s3, rows[0]) // 동기처리
-                .then(res => {
-                  console.log('res:', res);
-                  if (res == 0000) {  
-                    getMemberInfo(1) // 회원정보+모델이 생성된 적 있고, s3에도 존재O
-                      .then(res => { resolve(res); })
-                      .catch(error => { reject(error); });
-                  } else if (res == 1005) { // 모델이 생성된 적 있고, s3에 존재X.
-                    getMemberInfo(0) 
-                    .then(res => { resolve(res); })
-                    .catch(error => { reject(error); });
-                  } else {
-                    resolve(9999);
-                  }
-                })
-                .catch(err => { reject(err);  });
-          }
-          
-
-          const rows_2 = new Promise((resolve, reject) => {
-            connection.query(sql_2, [query], (err, rows) => {
-              console.log('try rows_2 : %o', rows);
-              if (err) {
-                console.log('err,', err)
-                resolve(9999);
-              } else {
-                if (!rows) resolve(1005);
-                  console.log('camelcaseKeys(rows),', camelcaseKeys(rows))
-                  return resolve(camelcaseKeys(rows));
-                // if (rows.length == 1) { //중복제한 임시주석
-                //   resolve(camelcaseKeys(rows));
-                // } else {
-                //   resolve(1005);
-                // }
-              }
-            });
+      if (res1.length == 1) { 
+        console.log('이멜있음');
+        console.log('이멜있음', res1[0].userId);
+        user_id = res1[0].userId;
+        console.log('user_id :', user_id);
+        return mySQLQuery(selectS3fileName(user_id)); // 텍스처까지 생성된 완성형 반려견모델인지 확인해서 isModelCreated:1응답하기
+      } else if (res1.length == 0) { 
+        console.log('이멜없음');
+        return resolve(1005);
+      }
+      else { // 중복! 
+        // return resolve(9999); //중복테스트할 때만 주석하기 //<-주석풀면 아래내용을 주석하기
+        if (query == 'test_hj@gmail.com') user_id = 42; // 테스트계정지정
+        return mySQLQuery(selectS3fileName(user_id)); // 텍스처까지 생성된 완성형 반려견모델인지 확인해서 isModelCreated:1응답하기
+      }
+    })
+      
+    // DOG테이블에서 반려견모델 조회
+    .then((res2) => {
+      console.log('DOG테이블에서 반려견모델 조회 res2 : %o', res2); // {fvFilename, svFilename ..}
+      if (res2 == null)  console.log('if (res2 == null)');
+      if (res2 == undefined)  console.log('if (res2 == undefined)');
+      if (res2[0] == null)console.log('if (res2[0] == null)');
+      if (res2[0] == undefined)   console.log('if (res2[0] == undefined)');
+        
+      // 반려견 모델을 아예 만든 적 없음 ~ 텍스처생성직전까지 오는 곳
+      // isModelCreated:0 리턴
+      if (res2[0] == null || res2[0].fvFilename == undefined || res2[0].svFilename == undefined || res2[0].fvTxtFilename == undefined || res2[0].svTxtFilename == undefined) {
+        console.log('텍스처까지 생성된 완성형 반려견모델X 1');
+        getMemberInfo(0, user_id) // 회원정보+모델이 생성된 적 없다.             
+          .then(res2 => {
+            console.log('텍스처까지 생성된 완성형 반려견모델X 2');
+            resolve(res2[0]);
+          })
+          .catch(error => {
+            reject(error);
           });
-        }
-      });
-    });
+        
+      // 텍스처까지 생성된 완성형 반려견모델이라면 
+      // isModelCreated:1 리턴
+      } else {
+        console.log('텍스처까지 생성된 완성형 반려견모델O');
+        /** 
+          S3에서 해당 파일이 있는지 조회하기
+          S3에 없는 파일명이면 응답코드0000, isModelCreated=0
+          S3에 있는 파일명이면 응답코드0000, isModelCreated=1
+        */ 
+          checkExists(s3, res2[0]) // 동기처리
+          .then(res3 => {
+            console.log('res3333:', res3);
+            if (res3 == 0000) {  
+              getMemberInfo(1, user_id) // s3에도 존재O
+                .then(res3 => {
+                  console.log('res3:', res3);
+                  console.log('res3[0]:', res3[0]);
+                  resolve(res3[0]);
+                })
+                .catch(error => { reject(error); });
+              
+            } else if (res3 == 1005) { // s3에 존재X.
+              getMemberInfo(0, user_id) 
+              .then(res3 => { resolve(res3[0]); })
+              .catch(error => { reject(error); });
+            } else { resolve(9999); }
+          })
+        .catch(err => { reject(err); });
+      }
+    })
+    .catch((err) => { console.log('err:'+err) });
+  });
   
-  async function getMemberInfo(isModelCreated) {
+  // 보여지는 출력값
+  async function getMemberInfo(isModelCreated, user_id) {
     console.log('getMemberInfo()입장', isModelCreated);
-    const sql_2 = `SELECT *, ? as isModelCreated
-                    FROM MEMBER
-                    WHERE user_email = ?`;
+    // const sql_2 = `SELECT *, ? as isModelCreated 
+    //                 FROM MEMBER
+    //                 WHERE user_id = ?`;
+    
+    
+    const sql_2 = `
+    SELECT m.user_id AS userId, m.login_sns_type AS loginSnsType, m.mem_type AS memType, m.user_email AS userEmail,
+          m.nickname, m.created_at AS createdAt, m.leave_at AS leaveAt, m.leave_reason_num AS leaveReasonNum, m.leave_reason,
+          d.dog_name AS dogName, d.dog_id AS dogId, d.breed_type AS dogBreedName, d.fv_txt_filename, d.sv_txt_filename
+      , ? as isModelCreated 
+          FROM MEMBER m
+      JOIN DOG d ON m.user_id = d.user_id
+      WHERE m.user_id = ?
+    `;
     const rows_2 = await new Promise((resolve, reject) => {
-      connection.query(sql_2, [isModelCreated, query], (err, rows) => {
+      connection.query(sql_2, [isModelCreated, user_id], (err, rows) => {
         console.log('try rows_2 : %o', rows);
         if (err) {
           console.log('err,', err)
           resolve(9999);
         } else {
           if (!rows) resolve(1005);
-            console.log('camelcaseKeys(rows),', camelcaseKeys(rows))
-            return resolve(camelcaseKeys(rows));
-          // if (rows.length == 1) { //중복제한 임시주석
-          //   resolve(camelcaseKeys(rows));
-          // } else {
-          //   resolve(1005);
-          // }
+          console.log('rows.length,', rows.length)
+          console.log('rows.0번째,', rows[rows.length - 1])
+          let res = [rows[rows.length - 1]]
+          console.log('rows.0번째,', rows[rows.length - 1])
+          console.log('resff :', res)
+          console.log('resff :', res)
+          
+          if (rows.length == 1) { 
+            resolve(camelcaseKeys(rows));
+            console.log('11')
+
+          } else {
+            console.log('22')
+            resolve(camelcaseKeys(res)); // 중복! 테스트끝나면 주석처리하기
+            // resolve(1005); // 중복! 테스트일때는 임시주석
+          }
         }
       });
     });
@@ -240,32 +283,72 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
 //DB에 회원정보 INSERT
 memberMng.prototype.insertNewMember = (query) => {
   console.log('log : %o', query);
-  
-  const sql = 'INSERT INTO MEMBER (login_sns_type, mem_type, leave_reason_num, user_email, created_at) VALUES (?, \'N\', 0, ?, NOW())';
+  function isExitMember(query) {
+    return {
+      text: `SELECT * FROM MEMBER
+              WHERE user_email = ? and mem_type = 'N' `, 
+      params: [query.email] 
+    };
+  }
+  function insertMember(query) {
+    return {
+      text: `INSERT INTO MEMBER 
+              (login_sns_type, mem_type, leave_reason_num, user_email, created_at) 
+              VALUES (?, \'N\', 0, ?, NOW())`, 
+      params: [query.loginSNSType, query.email] 
+    };
+  }
 
-  return new Promise((resolve, reject) => {
-    connection.query ( 
-      sql, 
-      [query.loginSNSType, query.email],
-      (err, rows) => {
-      if (err) {
-        console.log(err)
-        return resolve(9999);
-      } else {
-        return resolve(rows.insertId);
-      }
-    })
-  })
+  // 중복테스트면 계정1개바로추가, 아니면 이메일존재확인 후 계정추가 (주석필요는 없음)
+  if (query.email == 'test_hj@gmail.com') { // 테스트계정지정
+    return new Promise((resolve, reject) => {
+      mySQLQuery(insertMember(query)) // 쿼리1 실행
+      .then((res) => { // MEMBER테이블에 회원가입 완료
+        return resolve(res.insertId);
+      })
+      .catch((err) => {
+        console.log('err:' + err)
+        return resolve(9999); 
+      });
+    }); 
+  
+  } else {
+    // 회원가입 가능한지 확인
+    return new Promise((resolve, reject) => {
+      mySQLQuery(isExitMember(query)) // 쿼리1 실행
+      .then((res1) => { // res:mySQLQuery의 결과 
+        console.log('res1', res1);
+
+        if (res1.length == 0) {
+          console.log('회원가입 가능하다');
+          return mySQLQuery(insertMember(query)); 
+        } else {
+          console.log('회원가입 불가능하다');
+          return resolve(9999); // 이미존재하는 이메일도 9999처리. 1005메세지내용과 맞지않음
+        }
+      })
+      // MEMBER테이블에 회원가입 완료
+      .then((res2) => {
+        console.log('res2', res2);
+        return resolve(res2.insertId); 
+      })
+      .catch((err) => {
+        console.log('err:' + err)
+        return resolve(9999); 
+      });
+    });
+  }
 }
+
 
 // S3에서 파일명으로 사진존재유무 확인하기
 async function checkExists(s3, item) { // 수정예정
   console.log('checkExists() 입장 item:', item);
   let bucketPathList = [];
-  bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${item.fv_filename}` })
-  bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${item.sv_filename}` })
-  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.fv_txt_filename}` })
-  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.sv_txt_filename}` })
+  bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${item.fvFilename}` })
+  bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${item.svFilename}` })
+  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.fvTxtFilename}` })
+  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.svTxtFilename}` })
 
   const promises = [];
   bucketPathList.forEach((value, index, array) => {

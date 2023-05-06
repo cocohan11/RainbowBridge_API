@@ -39,6 +39,30 @@ const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp']
 
 
 /**
+ * 견종명 등록 API
+ * @route {POST} api/dog/breed
+ */
+router.post('/breed', async (req, res) => {
+  const apiName = '견종명 등록';
+  console.log('req.body: %o', req.body);
+  if (!req.body.dogId || !req.body.breedName) {
+    return resCode.returnResponseCode(res, 1002, apiName, null, null);
+  }
+
+
+  const rows = await dogMngDB.updateDogBreed(req.body);
+  console.log('rows: %o', rows);
+  if (rows == 0000) {
+    return resCode.returnResponseCode(res, 0000, apiName, null, null);
+  } else if (rows == 9999) {
+    return resCode.returnResponseCode(res, 9999, apiName, null, null);
+  } 
+  //? 1005 응답하는 상황이 있나??
+  
+})
+
+
+/**
  * 클라이언트에서 받은 이미지를 파일로 저장하기 위해 multer 라이브러리 사용
  * 인자값 설명
   - multer({storage: _storage}) : storage를 설정해, 파일을 저장하게 한다
@@ -51,6 +75,7 @@ const frontImageUploader = multer({
     key: (req, file, callback) => {
 
       console.log('frontImageUploader 호출');
+      // console.log('req: %o',req);
       const newFilename = `${Date.now()}_${file.originalname}.jpeg`; // 
       req.body.filename = newFilename; // 파일 이름을 req.body.filename에 저장
       console.log(`newFilename: ${newFilename}`);
@@ -238,7 +263,8 @@ router.post('/create', async (req, res) => {
   if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else {
-    const plusResult = { insert_id: rows }; // 원하는 출력 모양을 만듦
+    // 
+    const plusResult = { dogId: rows }; // 원하는 출력 모양을 만듦
     return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // insert_id 알고싶으면 null 대신 'addToResult' 넣기
   }
 })

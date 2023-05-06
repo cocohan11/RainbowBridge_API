@@ -105,15 +105,15 @@ router.get('/:email?', async (req, res) => {
   }
 
   const rows = await memberMngDB.selectMemberByEmail(s3, email);
-  // console.log('rows[0]: %o', rows[0]); // 중복제거 임시주석
-  console.log('rows: %o', rows);
+  console.log('member.js rows: %o', rows);
+  // console.log('member.js rows[0]: %o', rows[0]); // 중복! 테스트할 때만 임시주석
   if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else if (rows == 1005) {
     return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else {
     return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows); // key:value형태의 값을 파라미터로 보낸다
-    // return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows[0]); // 임시주석
+    // return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows[0]); // 중복! 테스트할 때만 임시주석
   }
 })
 
@@ -132,9 +132,9 @@ router.post('/join', async (req, res) => {
   }
 
   const rows = await memberMngDB.insertNewMember(req.body);
-  console.log(`rows: ${rows}`);
+  console.log(`member.js rows: ${rows}`);
   if (rows == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null, null);
+    return resCode.returnResponseCode(res, 9999, apiName, null, null); // 이미존재하는 이메일도 9999처리. 1005메세지내용과 맞지않음
   } else {
     const plusResult = { user_id: rows }; // 원하는 출력 모양을 만듦
     return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // user_id 알고싶으면 null 대신 'addToResult' 넣기

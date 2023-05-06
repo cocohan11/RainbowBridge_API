@@ -9,6 +9,36 @@ let message; //응답 메세지 전역변수 선언
 function dogMng() {
 }
 
+
+
+// 견종 등록
+dogMng.prototype.updateDogBreed = (query) => {
+
+  const updateDogBreed = { // 견종명 등록하기
+    text: ` UPDATE DOG d
+            SET d.breed_type = (
+              SELECT breed_id
+              FROM DOG_BREED
+              WHERE breed_type_en = ?
+            )
+            WHERE d.dog_id = ? `,
+    params : [query.breedName, query.dogId] 
+  };
+
+  return new Promise((resolve, reject) => {
+    memberMng.mySQLQuery(updateDogBreed) 
+    .then((res2) => {
+      console.log('res2 :', res2);
+      return resolve(0000); // 미정
+    })
+    .catch((err) => {
+      console.log('err:'+err)
+      return reject(9999); 
+    });
+  });
+}
+
+
 // DB에서 반려견정보 DELETE
 dogMng.prototype.deleteDogForRemake = (userId) => { 
   console.log('..userId : ', userId);
@@ -146,7 +176,7 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
     return new Promise((resolve, reject) => {
       
       Promise.all([
-        s3.deleteObjects(pramsForDeleteObjects(0,1)).promise(), // 메소드가 2개인 이유:경로마다 삭제요청을 별로도 해야함 
+        s3.deleteObjects(pramsForDeleteObjects(0, 1)).promise(), // 메소드가 2개인 이유:경로마다 삭제요청을 별로도 해야함 
         s3.deleteObjects(pramsForDeleteObjects(2, 3)).promise()
       
 
@@ -161,45 +191,54 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   }
 
   // 사진삭제 메소드에 필요한 파라미터 리턴
-  function pramsForDeleteObjects(bucketPathList) {
-    bucketPathList.forEach(obj => {
-      if (obj) {
-        console.log(obj.Bucket, obj.Key);
-      }
-    });
-    
-  }
-
-  // function pramsForDeleteObjects(idx1, idx2) { // 삭제할 파일 경로가 늘어나면 로직 수정하기
-  //   return params = {
-  //     Bucket: bucketPathList[idx1].Bucket, 
-  //     Delete: {
-  //      Objects: [
-  //       {
-  //         Key: bucketPathList[idx1].Key
-  //       }, 
-  //       {
-  //         Key: bucketPathList[idx2].Key 
-  //       }
-  //      ], 
-  //      Quiet: false // (참고) Delete API 요청에 대한 응답에 삭제 작업의 성공/실패 여부와 관련된 정보
+  // function pramsForDeleteObjects(bucketPathList) {
+  //   bucketPathList.forEach(obj => {
+  //     if (obj) {
+  //       console.log(obj.Bucket, obj.Key);
   //     }
-  //   };
+  //   });
+    
   // }
+
+  function pramsForDeleteObjects(idx1, idx2) { // 삭제할 파일 경로가 늘어나면 로직 수정하기
+    return params = {
+      Bucket: bucketPathList[idx1].Bucket, 
+      Delete: {
+       Objects: [
+        {
+          Key: bucketPathList[idx1].Key
+        }, 
+        {
+          Key: bucketPathList[idx2].Key 
+        }
+       ], 
+       Quiet: false // (참고) Delete API 요청에 대한 응답에 삭제 작업의 성공/실패 여부와 관련된 정보
+      }
+    };
+  }
 }
 
 
 //반려견 앞모습, 옆모습사진 파일명, S3 파일경로 DB에 저장
-dogMng.prototype.insertDogPhoto = (query) => {
+dogMng.prototype.insertDogPhoto = async (query) => {
   console.log('반려견 앞모습, 옆모습사진 파일명:', query);
-  
+ 
+  // 중복! 테스트할 때만 실행시키기
+  if (query.dogId == '-1') {
+    console.log('-1이다'); 
+    console.log('query : %o', query);
+    console.log('query.dogId : %o', query.dogId);
+    query.dogId = await getDogId(42); // 제일 최근 등록된 강아지id가져오기
+    console.log('query.dogId : %o', query.dogId);
+    console.log('dogId 다음에 위치하기');
+  } 
+
   let sql;
   if (query.type === 'front') { //앞모습 사진을 처리하는 쿼리문
     sql = 'UPDATE DOG SET fv_filename = ?, fv_filepath = ? WHERE dog_id = ?';  
   } else { //옆모습 사진을 처리하는 쿼리문
     sql = 'UPDATE DOG SET sv_filename = ?, sv_filepath = ? WHERE dog_id = ?';  
   }
-
 
   return new Promise((resolve, reject) => {
     connection.query ( 
@@ -211,18 +250,40 @@ dogMng.prototype.insertDogPhoto = (query) => {
           console.log('에러다~~!!~!~!')
           return resolve(9999);
         } else {
-          console.log('ㅇㅇㅇ:', rows); 
-            return resolve(rows);
+          // console.log('ㅇㅇㅇ:', rows); 
+          return resolve(rows);
+          // 중복! 테스트할 때만 임시주석
           // if (rows.changedRows == 1) { // changedRows : 0 update한게없음
           //   return resolve(rows);
           // } else {
-          //   return resolve('undefined'); // 중복막는거 임시주석...
+          //   return resolve('undefined'); 
           // }
       }
     })
   })
+  
+  async function getDogId(user_id) {
+    console.log('getDogId()입장', user_id);
+    const sql = `SELECT dog_id FROM DOG where user_id = ?
+                  ORDER BY dog_id DESC
+                  LIMIT 1`;
+    const dogId = await new Promise((resolve, reject) => {
+      connection.query(sql, [user_id], (err, rows) => {
+        console.log('try rows_2 : %o', rows);
+        if (err) {
+          console.log('err,', err)
+          resolve(9999);
+        } else {
+          console.log('dogId..: %o', rows[0].dog_id)
+          resolve(rows[0].dog_id);
+        }
+      });
+    });
+    console.log('dogId :', dogId)
+    return dogId; // 응답코드뿐만 아니라 회원정보까지 Promise로 리턴
+  }
+  
 }
-
 
 //텍스처가 입혀진 3D모델 생성을 위해 이미지 파일 URL,후처리된 3D model URL 조회
 dogMng.prototype.selectDogInfo = (query) => {
