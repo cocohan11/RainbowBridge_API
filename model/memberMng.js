@@ -232,7 +232,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
   
   // 보여지는 출력값
   async function getMemberInfo(isModelCreated, user_id) {
-    console.log('getMemberInfo()입장', isModelCreated);
+    console.log('getMemberInfo()입장', isModelCreated, user_id);
     // const sql_2 = `SELECT *, ? as isModelCreated 
     //                 FROM MEMBER
     //                 WHERE user_id = ?`;
@@ -244,32 +244,34 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
           d.dog_name AS dogName, d.dog_id AS dogId, d.breed_type AS dogBreedName, d.fv_txt_filename, d.sv_txt_filename
       , ? as isModelCreated 
           FROM MEMBER m
-      JOIN DOG d ON m.user_id = d.user_id
+          LEFT JOIN DOG d ON m.user_id = d.user_id
       WHERE m.user_id = ?
     `;
     const rows_2 = await new Promise((resolve, reject) => {
       connection.query(sql_2, [isModelCreated, user_id], (err, rows) => {
-        console.log('try rows_2 : %o', rows);
+        console.log('try rows : %o', rows);
         if (err) {
           console.log('err,', err)
           resolve(9999);
         } else {
           if (!rows) resolve(1005);
           console.log('rows.length,', rows.length)
-          console.log('rows.0번째,', rows[rows.length - 1])
-          let res = [rows[rows.length - 1]]
-          console.log('rows.0번째,', rows[rows.length - 1])
-          console.log('resff :', res)
-          console.log('resff :', res)
+          if (rows.length > 0) { // 로그확인할 때 에러나서 따로 if문만듦
+            console.log('rows.0번째,', rows[rows.length - 1])
+            let res = [rows[rows.length - 1]]
+            console.log('rows.0번째,', rows[rows.length - 1])
+            console.log('resff :', res)
+          }
           
           if (rows.length == 1) { 
             resolve(camelcaseKeys(rows));
             console.log('11')
 
-          } else {
+          } else if (rows.length == 0) {
             console.log('22')
             resolve(camelcaseKeys(res)); // 중복! 테스트끝나면 주석처리하기
-            // resolve(1005); // 중복! 테스트일때는 임시주석
+          } else {
+            console.log('33')
           }
         }
       });
