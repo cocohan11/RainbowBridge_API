@@ -136,7 +136,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
   function selectMemberInfo(query) {
     return {
       text: `SELECT * FROM MEMBER 
-             WHERE user_email = ? `, 
+             WHERE user_email = ? and mem_type = 'N'`, 
       params: [query] 
     };
   }
@@ -157,6 +157,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
   return new Promise((resolve, reject) => {
     mySQLQuery(selectMemberInfo(query)) // 쿼리1 실행
     .then((res1) => { // res:mySQLQuery의 결과 
+      console.log('query... : %o', query);
       console.log('res11 : %o', res1);
       console.log('res11 length : %o', res1.length);
 
@@ -173,6 +174,8 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
       else { // 중복! 
         // return resolve(9999); //중복테스트할 때만 주석하기 //<-주석풀면 아래내용을 주석하기
         if (query == 'test_hj@gmail.com') user_id = 42; // 테스트계정지정
+        if (query == 'asdf4777@naver.com') user_id = 254; 
+        console.log('중복! user_id :', user_id);
         return mySQLQuery(selectS3fileName(user_id)); // 텍스처까지 생성된 완성형 반려견모델인지 확인해서 isModelCreated:1응답하기
       }
     })
@@ -213,13 +216,14 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
             if (res3 == 0000) {  
               getMemberInfo(1, user_id) // s3에도 존재O
                 .then(res3 => {
-                  console.log('res3:', res3);
+                  console.log('getMemberInfo(1, user_id) res3 :', user_id);
                   console.log('res3[0]:', res3[0]);
                   resolve(res3[0]);
                 })
                 .catch(error => { reject(error); });
               
             } else if (res3 == 1005) { // s3에 존재X.
+              console.log('getMemberInfo(0, user_id) user_id :', user_id);
               getMemberInfo(0, user_id) 
               .then(res3 => { resolve(res3[0]); })
               .catch(error => { reject(error); });
@@ -256,7 +260,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
           resolve(9999);
         } else {
           if (!rows) resolve(1005);
-          console.log('rows.length,', rows.length)
+          console.log(',,rows.length,', rows.length)
           if (rows.length > 0) { // 로그확인할 때 에러나서 따로 if문만듦
             console.log('rows.0번째,', rows[rows.length - 1])
             let res = [rows[rows.length - 1]]
@@ -270,9 +274,13 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
 
           } else if (rows.length == 0) {
             console.log('22')
+            console.log('res :%o', res)
             resolve(camelcaseKeys(res)); // 중복! 테스트끝나면 주석처리하기
           } else {
             console.log('33')
+            let result = [rows[rows.length - 1]]; // []로 감싸기
+            console.log('result :%o', result)
+            resolve(camelcaseKeys(result));
           }
         }
       });
@@ -303,7 +311,7 @@ memberMng.prototype.insertNewMember = (query) => {
   }
 
   // 중복테스트면 계정1개바로추가, 아니면 이메일존재확인 후 계정추가 (주석필요는 없음)
-  if (query.email == 'test_hj@gmail.com') { // 테스트계정지정
+  if (query.email == 'test_hj@gmail.com' || query.email == 'asdf4777@naver.com') { // 테스트계정지정
     return new Promise((resolve, reject) => {
       mySQLQuery(insertMember(query)) // 쿼리1 실행
       .then((res) => { // MEMBER테이블에 회원가입 완료
