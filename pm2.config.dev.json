@@ -1,0 +1,13 @@
+{
+  "apps": {
+      "name": "rainbowbridge-api",
+      "script": "index.js",
+      "instances": 1,
+      "exec_mode": "cluster",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "watch": true,
+      "ignore_watch": ["node_modules"]
+  }
+}

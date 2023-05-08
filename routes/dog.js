@@ -14,9 +14,7 @@ const fs = require('fs');
 // Load the AWS SDK for Node.js
 const AWS = require('aws-sdk');
 
-// require('dotenv').config();
-const config = require('../config/config');
-const { log } = require('console');
+
 
 /**
  * 공통에러 핸들링
@@ -26,11 +24,21 @@ class ResponseEmptyError extends Error {}
 class CommonError extends Error {}
 
 // AWS 접근키 설정
-AWS.config.update({
-  region: config.region,
-  accessKeyId: config.accessKeyId,
-  secretAccessKey: config.secretAccessKey
-});
+if( process.env.NODE_ENV == 'production' ) {
+	AWS.config.update({
+    region: process.env.AWS_REGION,
+    accessKeyId: process.env.AWS_ACCESSKEYID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESSKEY
+  });
+
+} else if( process.env.NODE_ENV == 'development' ) { 
+	AWS.config.update({
+    region: process.env.AWS_REGION,
+    accessKeyId: process.env.AWS_ACCESSKEYID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESSKEY
+  });
+}
+
 
 const s3 = new AWS.S3();
 

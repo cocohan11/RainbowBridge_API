@@ -1,13 +1,15 @@
 // 개발버전인지 상용버전인지 구분
 process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'production' ) ? 'production' : 'development';
-console.log(process.env.NODE_ENV);
+console.log('>>>>>>> process mode >>>>>>>> ', process.env.NODE_ENV);
+
+
 
 // express 사용설정
 const express = require('express');
 // 비동기처리 에러핸들링을 위한 모듈
 require('express-async-errors');
 const app = express();
-var pretty = require('express-prettify'); // json 줄정렬
+const pretty = require('express-prettify'); // json 줄정렬
 
 // 파일을 읽어나 쓰는 모듈
 const fs = require('fs');
@@ -23,8 +25,7 @@ const bodyParser = require('body-parser');
 
 //.env라는 파일에 정보를 저장하고, 그 안의 정보를 환경변수로 등록해주는 모듈
 const dotenv = require('dotenv');
-const { log } = require('console');
-dotenv.config(); // .env 파일을 읽어온다.
+// dotenv.config(); // .env 파일을 읽어온다.
 
 
 //에러핸들링을 위한 구문. Error로부터 상속된 예외 클래스 선언
@@ -46,8 +47,30 @@ app.use('/util', express.static(path.join(__dirname, 'util')));
 //주소 뒤에 ?p 만 붙여주면 알아서 이쁘게 나온다.
 app.use(pretty({ query: 'p' }));
 
+
 //서버포트 지정
-const port = 3001;
+// const port = 3001;
+
+let envFilePath;
+switch (process.env.NODE_ENV) {
+  case "production":
+    envFilePath = `${__dirname}/config/.env.production`;
+    break;
+  case "development":
+    console.log(__dirname);
+    envFilePath = `${__dirname}/config/.env.development`;
+    break;
+  default:
+    envFilePath = `${__dirname}/config/.env.development`;
+}
+dotenv.config({ path: envFilePath }); // path 설정
+
+ //서버포트 지정
+const port = process.env.PORT
+console.log('port :', process.env.PORT);+
+
+
+
 
 
 /**
