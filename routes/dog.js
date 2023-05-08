@@ -80,7 +80,7 @@ router.post('/breed', async (req, res) => {
 const frontImageUploader = multer({
   storage: multerS3({
     s3: s3,
-    bucket: 'user-input-photo/front', //생성할 버킷 디렉토리
+    bucket: process.env.S3_BUCKET_PHOTO+'/front', //생성할 버킷 디렉토리
     key: (req, file, callback) => {
 
       console.log('frontImageUploader 호출');
@@ -114,7 +114,7 @@ const frontImageUploader = multer({
 const sideImageUploader = multer({
   storage: multerS3({
     s3: s3,
-    bucket: 'user-input-photo/side', //생성한 버킷이름
+    bucket: process.env.S3_BUCKET_PHOTO+'/side', //생성한 버킷이름
     key: (req, file, callback) => {
 
       console.log('sideImageUploade 호출');

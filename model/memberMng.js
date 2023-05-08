@@ -364,10 +364,10 @@ memberMng.prototype.insertNewMember = (query) => {
 async function checkExists(s3, item) { // 수정예정
   console.log('checkExists() 입장 item:', item);
   let bucketPathList = [];
-  bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${item.fvFilename}` })
-  bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${item.svFilename}` })
-  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.fvTxtFilename}` })
-  bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.svTxtFilename}` })
+  bucketPathList.push({ Bucket: process.env.S3_BUCKET_PHOTO, Key: `front/${item.fvFilename}` })
+  bucketPathList.push({ Bucket: process.env.S3_BUCKET_PHOTO, Key: `side/${item.svFilename}` })
+  bucketPathList.push({ Bucket: process.env.S3_BUCKET_TEXTURE_PHOTO, Key: `side/${item.fvTxtFilename}` })
+  bucketPathList.push({ Bucket: process.env.S3_BUCKET_TEXTURE_PHOTO, Key: `side/${item.svTxtFilename}` })
 
   const promises = [];
   bucketPathList.forEach((value, index, array) => {

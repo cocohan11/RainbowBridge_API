@@ -99,15 +99,17 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
     // 값이 있는 것만 삭제하기
   console.log('bucketPathList에 push할거임');
   let bucketPathList = []; 
-  if (item.fvFilename) bucketPathList.push({ Bucket: 'user-input-photo', Key: `front/${item.fvFilename}` })
+  if (item.fvFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_PHOTO, Key: `front/${item.fvFilename}` })
     else bucketPathList.push(null);
-  if (item.svFilename) bucketPathList.push({ Bucket: 'user-input-photo', Key: `side/${item.svFilename}` })
+  if (item.svFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_PHOTO, Key: `side/${item.svFilename}` })
     else bucketPathList.push(null);
-  if (item.fvTxtFilename) bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `front/${item.fvTxtFilename}` })
+  if (item.fvTxtFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_TEXTURE_PHOTO, Key: `front/${item.fvTxtFilename}` })
     else bucketPathList.push(null);
-  if (item.svTxtFilename) bucketPathList.push({ Bucket: 'user-input-texture-photo', Key: `side/${item.svTxtFilename}` })
+  if (item.svTxtFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_TEXTURE_PHOTO, Key: `side/${item.svTxtFilename}` })
     else bucketPathList.push(null);
   console.log('bucketPathList : ', bucketPathList);
+
+
 
 
   return new Promise((resolve, reject) => { // Promise.all() -> Promise()로 변경 // Promise.all:비동기. 모든 함수의 결과를 기다린 후 하나의 프로미스 객체를 반환
