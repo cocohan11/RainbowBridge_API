@@ -1,3 +1,4 @@
+//커밋을 위한 주석
 // 개발버전인지 상용버전인지 구분
 process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'production' ) ? 'production' : 'development';
 console.log('>>>>>>> process mode >>>>>>>> ', process.env.NODE_ENV);
