@@ -173,8 +173,11 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
       }
       else { // 중복! 
         // return resolve(9999); //중복테스트할 때만 주석하기 //<-주석풀면 아래내용을 주석하기
-        if (query == 'test_hj@gmail.com') user_id = 42; // 테스트계정지정
+        if (query == 'test_hj@gmail.com') user_id = 42; // 중복! 테스트계정지정
         if (query == 'asdf4777@naver.com') user_id = 254; 
+        if (query == 'alswnsdlqkqh@hanmail.net') user_id = 204; 
+        if (query == 'kmj87664966@gmail.com') user_id = 203; 
+        if (query == 'test_wk@gmail.com') user_id = 260; 
         console.log('중복! user_id :', user_id);
         return mySQLQuery(selectS3fileName(user_id)); // 텍스처까지 생성된 완성형 반려견모델인지 확인해서 isModelCreated:1응답하기
       }
@@ -311,7 +314,12 @@ memberMng.prototype.insertNewMember = (query) => {
   }
 
   // 중복테스트면 계정1개바로추가, 아니면 이메일존재확인 후 계정추가 (주석필요는 없음)
-  if (query.email == 'test_hj@gmail.com' || query.email == 'asdf4777@naver.com') { // 테스트계정지정
+  if (query.email == 'test_hj@gmail.com'
+    || query.email == 'asdf4777@naver.com'
+    || query.email == 'alswnsdlqkqh@hanmail.net'
+    || query.email == 'kmj87664966@gmail.com'
+    || query.email == 'test_wk@gmail.com'
+  ) { // 중복! 테스트계정지정
     return new Promise((resolve, reject) => {
       mySQLQuery(insertMember(query)) // 쿼리1 실행
       .then((res) => { // MEMBER테이블에 회원가입 완료
