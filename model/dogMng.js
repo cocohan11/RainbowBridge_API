@@ -93,7 +93,16 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   console.log('prototype.deleteDogImage() 입장');
 
   // 버킷 정보
-  const item = list[0]; // 에러나면 여기 의심해보기(어쩔 때는 [0][0]여야되는 적이 있음)
+  let item = ''
+  let fileCount = list.length;
+  console.log('fileCount :', fileCount);
+  if (list.length == 1) {
+    item = list[0]; // 에러나면 여기 의심해보기(어쩔 때는 [0][0]여야되는 적이 있음)
+  } else {
+    console.log('else');
+    item = list[fileCount-1]; // 에러나면 여기 의심해보기(어쩔 때는 [0][0]여야되는 적이 있음)
+    console.log('list[0]', item);
+  }
   console.log('파일명 있는 것만 삭제하기 :', item);
     // return 1005; // 응답코드
     // 값이 있는 것만 삭제하기

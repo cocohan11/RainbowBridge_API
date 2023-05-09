@@ -254,7 +254,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
     const sql_2 = `
     SELECT m.user_id AS userId, m.login_sns_type AS loginSnsType, m.mem_type AS memType, m.user_email AS userEmail,
           m.nickname, m.created_at AS createdAt, m.leave_at AS leaveAt, m.leave_reason_num AS leaveReasonNum, m.leave_reason,
-          d.dog_name AS dogName, d.dog_id AS dogId, d.breed_type AS dogBreedName, d.fv_filepath, d.sv_filepath
+          d.dog_name AS dogName, d.dog_id AS dogId, d.breed_type AS dogBreedName, d.fv_txt_filename, d.sv_txt_filename
       , ? as isModelCreated 
           FROM MEMBER m
           LEFT JOIN DOG d ON m.user_id = d.user_id
@@ -276,20 +276,56 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
             console.log('resff :', res)
           }
           
-          if (rows.length == 1) { 
-            resolve(camelcaseKeys(rows));
-            console.log('11')
+          // 임시!` fv_txt_filepath, sv_txt_filepath컬럼만들어서 값 삽입되면 다시 돌려놓기
+          console.log('33')
+          const result = JSON.parse(JSON.stringify(rows[rows.length - 1])); // RowDataPacket형식없애서 속성변경할 수 있도록 함
+          console.log(result);
+          console.log('fv_txt_filename,, :', result.fv_txt_filename);  
 
+          console.log(result); // {name: '둘리', age: 20, money: 20000}
+          // money 프로퍼티를 salary 프로퍼티에 할당
+          console.log('process.env.FV_TEXT_FILE_PATH :', process.env.FV_TEXT_FILE_PATH);
+          console.log('process.env.SV_TEXT_FILE_PATH :', process.env.SV_TEXT_FILE_PATH);
+          if (result.fv_txt_filename != null) result['fvTxtFilename'] = process.env.FV_TEXT_FILE_PATH + result.fv_txt_filename + '.png'; // 임시! fv_filepath대신 다른대체값 넣기
+          else result['fvTxtFilename'] = null;
+          
+          if (result.fv_txt_filename != null) result['svTxtFilename'] = process.env.SV_TEXT_FILE_PATH + result.sv_txt_filename + '.png';
+          else result['svTxtFilename'] = null;
+          
+          // 기존 프로퍼티 제거
+          delete result['fv_txt_filename'];
+          delete result['sv_txt_filename'];
+          // 이름 변경 후 
+          console.log('이름 변경 후', result); // {name: '둘리', age: 20, salary: 20000}
+
+          
+          if (rows.length == 1) { 
+            resolve(camelcaseKeys([result]));
+            console.log('11')
           } else if (rows.length == 0) {
             console.log('22')
             console.log('res :%o', res)
-            resolve(camelcaseKeys(res)); // 중복! 테스트끝나면 주석처리하기
+            resolve(camelcaseKeys([result])); // 중복! 테스트끝나면 주석처리하기
           } else {
-            console.log('33')
-            let result = [rows[rows.length - 1]]; // []로 감싸기
-            console.log('result :%o', result)
-            resolve(camelcaseKeys(result));
+            resolve(camelcaseKeys([result]));
           }
+
+          //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+          // 임시! 위에 코드 지우고 주석풀기
+          // if (rows.length == 1) { 
+          //   resolve(camelcaseKeys(rows));
+          //   console.log('11')
+
+          // } else if (rows.length == 0) {
+          //   console.log('22')
+          //   console.log('res :%o', res)
+          //   resolve(camelcaseKeys(res)); // 중복! 테스트끝나면 주석처리하기
+          // } else {
+          //   console.log('33')
+          //   let result = [rows[rows.length - 1]]; // []로 감싸기
+          //   console.log('result :%o', result)
+          //   resolve(camelcaseKeys(result));`
+          // }
         }
       });
     });
