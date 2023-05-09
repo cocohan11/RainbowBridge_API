@@ -273,7 +273,7 @@ router.post('/create', async (req, res) => {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else {
     // 
-    const plusResult = { dogId: rows }; // 원하는 출력 모양을 만듦
+    const plusResult = { dogId: rows } ; // dogId로 변경됨
     return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // insert_id 알고싶으면 null 대신 'addToResult' 넣기
   }
 })
