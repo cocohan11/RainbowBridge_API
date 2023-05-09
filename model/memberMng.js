@@ -173,11 +173,16 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
       }
       else { // 중복! 
         // return resolve(9999); //중복테스트할 때만 주석하기 //<-주석풀면 아래내용을 주석하기
-        if (query == 'test_hj@gmail.com') user_id = 42; // 중복! 테스트계정지정
-        if (query == 'asdf4777@naver.com') user_id = 254; 
-        if (query == 'alswnsdlqkqh@hanmail.net') user_id = 204; 
-        if (query == 'kmj87664966@gmail.com') user_id = 203; 
-        if (query == 'test_wk@gmail.com') user_id = 260; 
+        console.log('TEST_HJ_USER_ID:', process.env.TEST_HJ_USER_ID);
+        console.log('TEST_ASDF_USER_ID:', process.env.TEST_ASDF_USER_ID);
+        console.log('TEST_QKQH_USER_ID:', process.env.TEST_QKQH_USER_ID);
+        console.log('TEST_MJ_USER_ID:', process.env.TEST_MJ_USER_ID);
+        console.log('TEST_WK_USER_ID:', process.env.TEST_WK_USER_ID);
+        if (query == 'test_hj@gmail.com') user_id = process.env.TEST_HJ_USER_ID; // 중복! 테스트계정지정
+        if (query == 'asdf4777@naver.com') user_id = process.env.TEST_ASDF_USER_ID; 
+        if (query == 'alswnsdlqkqh@hanmail.net') user_id = process.env.TEST_QKQH_USER_ID; 
+        if (query == 'kmj87664966@gmail.com') user_id = process.env.TEST_MJ_USER_ID; 
+        if (query == 'test_wk@gmail.com') user_id = process.env.TEST_WK_USER_ID; 
         console.log('중복! user_id :', user_id);
         return mySQLQuery(selectS3fileName(user_id)); // 텍스처까지 생성된 완성형 반려견모델인지 확인해서 isModelCreated:1응답하기
       }
@@ -249,7 +254,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
     const sql_2 = `
     SELECT m.user_id AS userId, m.login_sns_type AS loginSnsType, m.mem_type AS memType, m.user_email AS userEmail,
           m.nickname, m.created_at AS createdAt, m.leave_at AS leaveAt, m.leave_reason_num AS leaveReasonNum, m.leave_reason,
-          d.dog_name AS dogName, d.dog_id AS dogId, d.breed_type AS dogBreedName, d.fv_txt_filename, d.sv_txt_filename
+          d.dog_name AS dogName, d.dog_id AS dogId, d.breed_type AS dogBreedName, d.fv_filepath, d.sv_filepath
       , ? as isModelCreated 
           FROM MEMBER m
           LEFT JOIN DOG d ON m.user_id = d.user_id

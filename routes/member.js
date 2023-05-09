@@ -85,7 +85,10 @@ router.post('/leave', async (req, res) => {
   
   // S3에서 사진 삭제하기
   console.log('list:', list); 
-  if (list[0] != null ) {
+  if (list[0] != null || list != undefined) {
+    if(list[0].fvFilename != null) {
+      return resCode.returnResponseCode(res, 9999, apiName, null, null);
+    }
     const data = await dogMngDB.deleteDogImage(s3, list); 
     console.log('S3에서 사진 삭제하기 data:', data); 
     if (data == 0000) { // 파일 삭제 true OR false
