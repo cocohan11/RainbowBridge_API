@@ -255,11 +255,11 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
     SELECT m.user_id AS userId, m.login_sns_type AS loginSnsType, m.mem_type AS memType, m.user_email AS userEmail,
       m.nickname, m.created_at AS createdAt, m.leave_at AS leaveAt, m.leave_reason_num AS leaveReasonNum, m.leave_reason,
       d.dog_name AS dogName, d.dog_id AS dogId, db.breed_type_en AS dogBreedName, d.fv_txt_filename, d.sv_txt_filename,
-      1 as isModelCreated 
+      ? as isModelCreated 
       FROM MEMBER m
       LEFT JOIN DOG d ON m.user_id = d.user_id
       LEFT JOIN DOG_BREED db ON d.breed_type = db.breed_id
-      WHERE m.user_id = 263
+      WHERE m.user_id = ?
     `;
     const rows_2 = await new Promise((resolve, reject) => {
       connection.query(sql_2, [isModelCreated, user_id], (err, rows) => {
