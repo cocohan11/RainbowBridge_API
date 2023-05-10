@@ -178,11 +178,11 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
         console.log('TEST_QKQH_USER_ID:', process.env.TEST_QKQH_USER_ID);
         console.log('TEST_MJ_USER_ID:', process.env.TEST_MJ_USER_ID);
         console.log('TEST_WK_USER_ID:', process.env.TEST_WK_USER_ID);
-        if (query == 'test_hj@gmail.com') user_id = process.env.TEST_HJ_USER_ID; // 중복! 테스트계정지정
-        if (query == 'asdf4777@naver.com') user_id = process.env.TEST_ASDF_USER_ID; 
-        if (query == 'alswnsdlqkqh@hanmail.net') user_id = process.env.TEST_QKQH_USER_ID; 
-        if (query == 'kmj87664966@gmail.com') user_id = process.env.TEST_MJ_USER_ID; 
-        if (query == 'test_wk@gmail.com') user_id = process.env.TEST_WK_USER_ID; 
+        if (query == '중복test_hj@gmail.com') user_id = process.env.TEST_HJ_USER_ID; // 중복! 테스트계정지정
+        if (query == '중복asdf4777@naver.com') user_id = process.env.TEST_ASDF_USER_ID; 
+        if (query == '중복alswnsdlqkqh@hanmail.net') user_id = process.env.TEST_QKQH_USER_ID; 
+        if (query == '중복kmj87664966@gmail.com') user_id = process.env.TEST_MJ_USER_ID; 
+        if (query == '중복test_wk@gmail.com') user_id = process.env.TEST_WK_USER_ID; 
         console.log('중복! user_id :', user_id);
         return mySQLQuery(selectS3fileName(user_id)); // 텍스처까지 생성된 완성형 반려견모델인지 확인해서 isModelCreated:1응답하기
       }
@@ -286,10 +286,10 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
           // money 프로퍼티를 salary 프로퍼티에 할당
           console.log('process.env.FV_TEXT_FILE_PATH :', process.env.FV_TEXT_FILE_PATH);
           console.log('process.env.SV_TEXT_FILE_PATH :', process.env.SV_TEXT_FILE_PATH);
-          if (result.fv_txt_filename != null) result['fvTxtFilename'] = process.env.FV_TEXT_FILE_PATH + result.fv_txt_filename + '.png'; // 임시! fv_filepath대신 다른대체값 넣기
+          if (result.fv_txt_filename != null) result['fvTxtFilename'] = process.env.FV_TEXT_FILE_PATH + result.fv_txt_filename; // 'https://user-input-texture-photo-prod.s3.ap-northeast-2.amazonaws.com/front/Face_result_image_96069e9a-f744-4678-92bf-01f2ef662c08.png'
           else result['fvTxtFilename'] = null;
           
-          if (result.fv_txt_filename != null) result['svTxtFilename'] = process.env.SV_TEXT_FILE_PATH + result.sv_txt_filename + '.png';
+          if (result.fv_txt_filename != null) result['svTxtFilename'] = process.env.SV_TEXT_FILE_PATH + result.sv_txt_filename;
           else result['svTxtFilename'] = null;
           
           // 기존 프로퍼티 제거
@@ -355,11 +355,11 @@ memberMng.prototype.insertNewMember = (query) => {
   }
 
   // 중복테스트면 계정1개바로추가, 아니면 이메일존재확인 후 계정추가 (주석필요는 없음)
-  if (query.email == 'test_hj@gmail.com'
-    || query.email == 'asdf4777@naver.com'
-    || query.email == 'alswnsdlqkqh@hanmail.net'
-    || query.email == 'kmj87664966@gmail.com'
-    || query.email == 'test_wk@gmail.com'
+  if ( query.email == '중복test_hj@gmail.com'
+    || query.email == '중복asdf4777@naver.com'
+    || query.email == '중복alswnsdlqkqh@hanmail.net'
+    || query.email == '중복kmj87664966@gmail.com'
+    || query.email == '중복test_wk@gmail.com'
   ) { // 중복! 테스트계정지정
     return new Promise((resolve, reject) => {
       mySQLQuery(insertMember(query)) // 쿼리1 실행
