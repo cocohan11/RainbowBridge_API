@@ -108,6 +108,8 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
     // 값이 있는 것만 삭제하기
   console.log('bucketPathList에 push할거임');
   let bucketPathList = []; 
+  let bucketPathList_exist = [];
+
   if (item.fvFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_PHOTO, Key: `front/${item.fvFilename}` })
     else bucketPathList.push(null);
   if (item.svFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_PHOTO, Key: `side/${item.svFilename}` })
@@ -126,7 +128,7 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   checkExists(bucketPathList) 
     .then((res1) => { 
       console.log('checkExists - res1 : %o', res1); 
-      return deleteFiles(bucketPathList); 
+      return deleteFiles(bucketPathList_exist); 
     })
     .then((res2) => {
       console.log('deleteFiles - %o'); // {fvFilename, svFilename}
@@ -142,33 +144,38 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   function checkExists(bucketPathList) {
     console.log('checkExists() 입장');
     const promises = [];
-    
+
     bucketPathList.forEach((value, index, array) => {
-      console.log('forEach() value: %o', value);
+    console.log('forEach index: %o', index);
+    console.log('forEach() value: %o', value);
 
       // 1개씩 조회
-      promises.push(
-        new Promise((resolve, reject) => {
-          s3.headObject(value, function (err, exists_data) {
-            console.log('headObject() index: %o', index);
-            if (err) {
-              console.log(`File ${value.Key} does not exist.`);
-              reject(err);
-            } else {
-              console.log(`File ${value.Key} exists. checking...`);
-  
-              if (exists_data == null) {
-                reject(new Error(`File ${value.Key} does not exist.`));
+      if (value != null) {
+        promises.push(
+          new Promise((resolve, reject) => {
+            s3.headObject(value, function (err, exists_data) {
+              if (err) {
+                console.log(`File ${value.Key} does not exist.`);
+                reject(err);
               } else {
-                resolve(exists_data);
+                console.log(`File ${value.Key} exists. checking...`);
+                bucketPathList_exist.push(value);
+                console.log('존재 bucketPathList_exist : %o', bucketPathList_exist);
+
+                if (exists_data == null) {
+                  reject(new Error(`File ${value.Key} does not exist.`));
+                } else {
+                  resolve(exists_data);
+                }
               }
-            }
-            console.log('headObject() exists_data: %o', exists_data);
-          });
-        })
-      );
+              console.log('headObject() exists_data: %o', exists_data);
+            });
+          })
+          );
+      }
     });
     
+    console.log('랭스promises.length: %o', promises.length);
     return Promise.all(promises)
       .then((res) => {
         console.log('All files exist. Deleting...');
@@ -184,13 +191,14 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
   // 여러 오브젝트 삭제
   function deleteFiles(bucketPathList) {
     console.log('deleteFiles() 입장 Bucket:', bucketPathList);
-    console.log('deleteFiles() 입장 Bucket:', bucketPathList[0].Bucket);
+    console.log('deleteFiles() 입장 bucketPathList.length:', bucketPathList.length);
     return new Promise((resolve, reject) => {
       
-      Promise.all([
-        s3.deleteObjects(pramsForDeleteObjects(0, 1)).promise(), // 메소드가 2개인 이유:경로마다 삭제요청을 별로도 해야함 
-        s3.deleteObjects(pramsForDeleteObjects(2, 3)).promise()
-      
+      Promise.all([ // 경로마다 삭제요청을 별로도 해야함 
+        bucketPathList.forEach((value, index, array) => {
+          console.log('index:', index);
+          s3.deleteObjects(pramsForDeleteObjects(bucketPathList, index)).promise()
+        })
 
       ]).then(delete_data => {
         console.log(`File deleted successfully.`);  // 조회O 삭제O
@@ -212,16 +220,13 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
     
   // }
 
-  function pramsForDeleteObjects(idx1, idx2) { // 삭제할 파일 경로가 늘어나면 로직 수정하기
+  function pramsForDeleteObjects(bucketPathList_exist, idx) { // 삭제할 파일 경로가 늘어나면 로직 수정하기
     return params = {
-      Bucket: bucketPathList[idx1].Bucket, 
+      Bucket: bucketPathList_exist[idx].Bucket, 
       Delete: {
        Objects: [
         {
-          Key: bucketPathList[idx1].Key
-        }, 
-        {
-          Key: bucketPathList[idx2].Key 
+          Key: bucketPathList_exist[idx].Key 
         }
        ], 
        Quiet: false // (참고) Delete API 요청에 대한 응답에 삭제 작업의 성공/실패 여부와 관련된 정보
