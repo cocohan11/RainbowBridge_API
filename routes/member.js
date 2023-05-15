@@ -68,38 +68,39 @@ router.get('/test', async (req, res) => {
  */
 router.post('/leave', async (req, res) => {
   const apiName = '회원탈퇴';
-  console.log('req.body: %o', req.body);
+  logger.info(`${apiName} API`);
+  logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
 
   // 파라미터값 누락 확인
   if (!req.body.email|| !req.body.leaveReasonNum || !req.body.userId) { // POST는 비어있으면 다음과 같이 값을 넣어 반환 { email: 2, leaveReasonNum: 1, userId: 1 }
-    return resCode.returnResponseCode(res, 1002, apiName, null, null);
+    resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
   // DB에서 회원정보 UPDATE, 강아지정보 DELETE
   const list = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body); // 삭제할 사진이름 알아내기
-  console.log('~~list: %o', list); // err -> rows:false
+  logger.info(`updateMemberAndDeleteDogForLeave() 리턴값: \n${JSON.stringify(list, null, 2)}`);
   if (list == 1005) {
-    return resCode.returnResponseCode(res, 1005, apiName, null, null);
+    resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else if (list == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null, null);
+    resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else if (list == 'undefined') { // 반려견등록을 한 번도 한 전 없다면 undefined가 뜸 -> 0000
-    return resCode.returnResponseCode(res, 0000, apiName, null, null);
+    resCode.returnResponseCode(res, 0000, apiName, null, null);
   }
   
   // S3에서 사진 삭제하기
   console.log('list:', list); 
   if (list[0] != null || list != undefined) {
     if(list[0].fvFilename != null) {
-      return resCode.returnResponseCode(res, 9999, apiName, null, null);
+      resCode.returnResponseCode(res, 9999, apiName, null, null);
     }
     const data = await dogMngDB.deleteDogImage(s3, list); 
     console.log('S3에서 사진 삭제하기 data:', data); 
     if (data == 0000) { // 파일 삭제 true OR false
-      return resCode.returnResponseCode(res, 0000, apiName, null, null);
+      resCode.returnResponseCode(res, 0000, apiName, null, null);
     } else if (data == 9999) {
-      return resCode.returnResponseCode(res, 9999, apiName, null, null);
+      resCode.returnResponseCode(res, 9999, apiName, null, null);
     } else if (data == 9999) {
-      return resCode.returnResponseCode(res, 1005, apiName, null, null);
+      resCode.returnResponseCode(res, 1005, apiName, null, null);
     }
   }
   
@@ -116,20 +117,22 @@ router.post('/leave', async (req, res) => {
 router.get('/:email?', async (req, res) => {
   const apiName = '회원정보 조회';
   const email = req.params.email;
-
+  logger.info(`${apiName} API`);
+  logger.info(`파라미터: \n${JSON.stringify(req.params, null, 2)}`);
   if (!email) {
-    return resCode.returnResponseCode(res, 1002, apiName, null, null);
+    resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
   const rows = await memberMngDB.selectMemberByEmail(s3, email);
-  //console.log('member.js rows: %o', rows);
+  logger.info(`selectMemberByEmail() 리턴값: \n${JSON.stringify(rows, null, 2)}`);
+
   // console.log('member.js rows[0]: %o', rows[0]); // 중복! 테스트할 때만 임시주석
   if (rows == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null, null);
+    resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else if (rows == 1005) {
-    return resCode.returnResponseCode(res, 1005, apiName, null, null);
+    resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else {
-    return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows); // key:value형태의 값을 파라미터로 보낸다
+    resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows);
     // return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows[0]); // 중복! 테스트할 때만 임시주석
   }
 })
@@ -141,15 +144,14 @@ router.get('/:email?', async (req, res) => {
  */
 router.post('/join', async (req, res) => {
   const apiName = '회원정보 가입';
-  console.log('body %o:', req.body);
+  logger.info(`${apiName} API`);
+  logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
   if (!req.body.loginSNSType || !req.body.email) {
-    console.log('loginSNSType %o:', req.body.loginSNSType);
-    console.log('email %o:', req.body.email);
     return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
   const rows = await memberMngDB.insertNewMember(req.body);
-  console.log(`member.js rows: ${rows}`);
+  logger.info(`insertNewMember() 리턴값: \n${JSON.stringify(rows, null, 2)}`);
   if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null); // 이미존재하는 이메일도 9999처리. 1005메세지내용과 맞지않음
   } else {
