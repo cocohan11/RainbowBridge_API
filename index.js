@@ -49,16 +49,12 @@ app.use('/util', express.static(path.join(__dirname, 'util')));
 app.use(pretty({ query: 'p' }));
 
 
-//서버포트 지정
-// const port = 3001;
-
 let envFilePath;
 switch (process.env.NODE_ENV) {
   case "production":
     envFilePath = `${__dirname}/config/.env.production`;
     break;
   case "development":
-    console.log(__dirname);
     envFilePath = `${__dirname}/config/.env.development`;
     break;
   default:
@@ -68,10 +64,6 @@ dotenv.config({ path: envFilePath }); // path 설정
 
  //서버포트 지정
 const port = process.env.PORT
-console.log('port :', process.env.PORT);+
-
-
-
 
 
 /**
@@ -96,8 +88,6 @@ console.log('port :', process.env.PORT);+
 fs.readdirSync(__dirname + '/routes/').forEach(function (fileName) {
 	let routeName = fileName.substr(0, fileName.lastIndexOf('.'));
 	let fileFullPath = __dirname + '/routes/' + fileName;
-
-	console.log(`routeName: ${routeName}`);
 
 	if (fs.statSync(fileFullPath).isFile()) {
 		app.use('/api/' + routeName, require(fileFullPath));
