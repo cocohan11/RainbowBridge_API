@@ -1,3 +1,6 @@
+//winston을 이용해 로그를 남기는 처리
+const logger = require('../config/winston');
+
 //커밋을 위한 주석
 function resCode() {
 }
@@ -41,6 +44,8 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
         } else {
           message = '필수파라미터가 누락되어있습니다!'
         }
+        logger.error(`[ ${apiName} ] code: 1002 | message: ${message}`)
+
         res.status(401).json({
           result: {
             code: '1002', message

@@ -1,8 +1,6 @@
-//커밋을 위한 주석
 // 개발버전인지 상용버전인지 구분
 process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim().toLowerCase() == 'production' ) ? 'production' : 'development';
 console.log('>>>>>>> process mode >>>>>>>> ', process.env.NODE_ENV);
-
 
 
 // express 사용설정
@@ -26,13 +24,22 @@ const bodyParser = require('body-parser');
 
 //.env라는 파일에 정보를 저장하고, 그 안의 정보를 환경변수로 등록해주는 모듈
 const dotenv = require('dotenv');
-// dotenv.config(); // .env 파일을 읽어온다.
 
+//winston을 이용해 로그를 남기는 처리진행
+const logger = require('./config/winston');
+const morgan = require('morgan');
+const combined = ':remote-addr - :remote-user ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"' 
+// 기존 combined 포멧에서 timestamp만 제거
+const morganFormat = process.env.NODE_ENV !== "production" ? "dev" : combined; // NOTE: morgan 출력 형태 server.env에서 NODE_ENV 설정 production : 배포 dev : 개발
+// console.log(morganFormat);
 
 //에러핸들링을 위한 구문. Error로부터 상속된 예외 클래스 선언
 class MissingParameterError extends Error {}
 class ResponseEmptyError extends Error {}
 class CommonError extends Error {}
+
+app.use(morgan(morganFormat, {stream : logger.stream})); // morgan 로그 설정 
+
 
 // Add cors
 app.use(cors());
@@ -52,18 +59,32 @@ app.use(pretty({ query: 'p' }));
 let envFilePath;
 switch (process.env.NODE_ENV) {
   case "production":
+    // 상용환경 변수 호출
     envFilePath = `${__dirname}/config/.env.production`;
     break;
   case "development":
+    // 개발환경 변수 호출
     envFilePath = `${__dirname}/config/.env.development`;
+    //debug레벨부터 로그출력
+    logger.level = 'debug'
     break;
   default:
+    logger.level = 'debug'
     envFilePath = `${__dirname}/config/.env.development`;
 }
 dotenv.config({ path: envFilePath }); // path 설정
 
  //서버포트 지정
 const port = process.env.PORT
+
+
+//위) 로그 테스트용이니 지우지 말고 남겨두세요. 제가 최종적으로 지우겠습니다.
+logger.debug('debug 1111 test');
+logger.debug('debug 2222 test');
+logger.info('info test');
+logger.warn('warning test');
+logger.error('error test');
+
 
 
 /**
@@ -121,7 +142,8 @@ app.use((err, req, res, next) => {
 app.use(express.static('policies')); // 정책조회 API (웹뷰로 조회)
 
 app.listen(port, () => {
-  console.log(`rainbowBridge Dev app listening on port ${port}`)
+  console.log(`RainbowBridge App Server listening on port ${port}`)
+  logger.info(`RainbowBridge App Server listening on port ${port}`)
 });
 
 

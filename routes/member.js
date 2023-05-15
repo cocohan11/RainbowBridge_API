@@ -9,6 +9,9 @@ const AWS = require('aws-sdk');
 let s3 = new AWS.S3();
 let message;
 
+//winston을 이용해 로그를 남기는 처리
+const logger = require('../config/winston');
+
 // AWS 접근키 설정
 if( process.env.NODE_ENV == 'production' ) {
 	AWS.config.update({
@@ -113,12 +116,13 @@ router.post('/leave', async (req, res) => {
 router.get('/:email?', async (req, res) => {
   const apiName = '회원정보 조회';
   const email = req.params.email;
+
   if (!email) {
     return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
   const rows = await memberMngDB.selectMemberByEmail(s3, email);
-  console.log('member.js rows: %o', rows);
+  //console.log('member.js rows: %o', rows);
   // console.log('member.js rows[0]: %o', rows[0]); // 중복! 테스트할 때만 임시주석
   if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
