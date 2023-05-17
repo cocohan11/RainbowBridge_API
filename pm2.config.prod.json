@@ -6,7 +6,6 @@
     "exec_mode": "cluster",
     "env": {
       "NODE_ENV": "production"
-    },
-    "test": "커밋을 위한 주석"
+    }
   }
 }

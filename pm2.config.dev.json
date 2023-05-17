@@ -7,8 +7,6 @@
       "env": {
         "NODE_ENV": "development"
       },
-      "watch": true,
-      "ignore_watch": ["node_modules"],
-      "test": "커밋을 위한 주석"
+      "ignore_watch": ["node_modules"]
   }
 }

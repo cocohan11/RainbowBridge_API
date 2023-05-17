@@ -1,7 +1,6 @@
 //winston을 이용해 로그를 남기는 처리
 const logger = require('../config/winston');
 
-//커밋을 위한 주석
 function resCode() {
 }
 /**

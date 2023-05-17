@@ -1,4 +1,3 @@
--- 커밋을 위한 주석
 # RainbowBridge Backend API 서버
   
 - RainbowBridge Backend API 프로젝트 입니다. 
