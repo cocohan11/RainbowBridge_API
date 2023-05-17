@@ -120,7 +120,7 @@ router.get('/:email?', async (req, res) => {
   const email = req.params.email;
   logger.info(`${apiName} API`);
   logger.info(`파라미터: \n${JSON.stringify(req.params, null, 2)}`);
-  if (!email) {
+  if (!email || email==",") { // swagger빈값에러때문에 ","를 조건문에 추가함
     resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 

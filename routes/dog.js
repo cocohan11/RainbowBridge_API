@@ -241,7 +241,7 @@ router.delete('/model/:userId?', async (req, res) => {
   const list = await dogMngDB.deleteDogForRemake(userId); // 삭제할 파일 이름들
   logger.info(`삭제할 파일 이름들(실패시 false): \n${JSON.stringify(list, null, 2)}`); // err -> list:false
   if (!list) { 
-    return resCode.returnResponseCode(res, 1005, apiName, null, null);
+    return resCode.returnResponseCode(res, 0000, apiName, null, null); // 0000이 맞음
   } 
 
   // S3에서 사진 삭제하기
@@ -275,9 +275,9 @@ router.post('/create', async (req, res) => {
   const row = await dogMngDB.insertDogInfo(req.body); // 리턴:dogId
   logger.info(`insertDogInfo()의 리턴 dogId: \n${JSON.stringify(row, null, 2)}`);
   if (row == 9999) {
-    return resCode.returnResponseCode(row, 9999, apiName, null, null);
+    return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else {
-    const plusResult = { dogId: res } ; // dogId로 변경됨
+    const plusResult = { dogId: row } ; // dogId로 변경됨
     return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // insert_id 알고싶으면 null 대신 'addToResult' 넣기
   }
 })

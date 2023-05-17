@@ -36,7 +36,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
           message = '필수파라미터가 누락되어있습니다!'
         }
         let result_empty = {
-          code: '0000',
+          code: '1002',
           message: message
         };
         logger.warn(`최종응답값 : \n${JSON.stringify(result_empty, null, 2)}`);
