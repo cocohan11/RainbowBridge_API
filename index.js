@@ -3,6 +3,7 @@ process.env.NODE_ENV = ( process.env.NODE_ENV && ( process.env.NODE_ENV ).trim()
 console.log('>>>>>>> process mode >>>>>>>> ', process.env.NODE_ENV);
 
 
+
 // express 사용설정
 const express = require('express');
 // 비동기처리 에러핸들링을 위한 모듈
@@ -79,8 +80,7 @@ const port = process.env.PORT
 
 
 //위) 로그 테스트용이니 지우지 말고 남겨두세요. 제가 최종적으로 지우겠습니다.
-logger.debug('debug 1111 test');
-logger.debug('debug 2222 test');
+logger.debug('debug >>>>>> 서비스 재배포 테스트~!!');
 logger.info('info test');
 logger.warn('warning test');
 logger.error('error test');
