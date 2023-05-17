@@ -12,7 +12,7 @@ function dogMng() {
 }
 
 
-
+// 수정 필수!! 강아지 id를 아무숫자나 입력해도 다 성공한다고 응답함
 // 견종 등록
 dogMng.prototype.updateDogBreed = (query) => {
 
@@ -24,18 +24,18 @@ dogMng.prototype.updateDogBreed = (query) => {
               WHERE breed_type_en = ?
             )
             WHERE d.dog_id = ? `,
-    params : [query.breedName, query.dogId] 
+    params : [query.breedName, query.dogId]  
   };
 
   return new Promise((resolve, reject) => {
     memberMng.mySQLQuery(updateDogBreed) 
     .then((res2) => {
-      console.log('res2 :', res2);
+      logger.info(`DOG테이블 업데이트 결과: \n${JSON.stringify(res2, null, 2)}`); // 4장의 사진명
       return resolve(0000); // 미정
     })
     .catch((err) => {
-      console.log('err:'+err)
-      return reject(9999); 
+      logger.warn(`DOG테이블 업데이트 err: \n${JSON.stringify(err, null, 2)}`); // 작업은 정상적으로 진행되서 error대신 warning사용
+      return resolve(9999); 
     });
   });
 }
@@ -43,14 +43,13 @@ dogMng.prototype.updateDogBreed = (query) => {
 
 // DB에서 반려견정보 DELETE
 dogMng.prototype.deleteDogForRemake = (userId) => { 
-  console.log('..userId : ', userId);
 
   const selectDog = { // S3에 저장된 파일을 삭제하기위해 파일명 알아내기
     text: `SELECT fv_filename, sv_filename, fv_txt_filename, sv_txt_filename 
             FROM DOG WHERE user_id = ?;`,
     params : userId
   };
-  const updateDogInfo = { // 강아지 정보를 아예 삭제하는게 아니라 사진정보만 비워준다. 
+  const updateDogInfo = { // 강아지를 아예 삭제하는게 아니라 사진정보만 비워준다. 
     text: `UPDATE DOG SET 
             fv_filename = null,
             fv_filepath = null,
@@ -70,19 +69,19 @@ dogMng.prototype.deleteDogForRemake = (userId) => {
       result1 = res1;
 
       if (result1.length == 0) {
-        console.log('result1length : %o', result1.length); 
+        logger.info(`DOG테이블에서 파일명 SELECT한 ROW갯수: ${result1.length}`);
         result1 = false;
       } else {
-        console.log('result1 : %o', result1); // {fvFilename, svFilename, fv_txt_filename, sv_txt_filename}
+        logger.info(`DOG테이블에서 파일명 SELECT한 ROW: \n${JSON.stringify(result1, null, 2)}`); 
         return memberMng.mySQLQuery(updateDogInfo); // 쿼리2 실행
       }
     })
     .then((res2) => {
-      console.log('res2');
+      logger.info('강아지를 아예 삭제하는게 아니라 사진정보만 비워줬다.');
       return resolve(result1);
     })
     .catch((err) => {
-      console.log('err:'+err)
+      logger.warn(`쿼리 selectDog 또는 updateDogInfo 에러: \n${JSON.stringify(err, null, 2)}`); 
       return reject(false); 
     });
   });
@@ -91,12 +90,11 @@ dogMng.prototype.deleteDogForRemake = (userId) => {
 
 // 반려견 사진 4장 유무조회와 삭제하기 (일반 앞, 일반 옆, 텍스처 앞, 텍스처 옆) 
 dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 리스트
-  console.log(list);
-  
+
   // 사진파일명 리스트
   let item = ''
   let fileCount = list.length;
-  logger.info(`존재하는 파일갯수: ${fileCount}`); 
+  logger.info(`반려견 마리 수: ${fileCount}`); 
   if (fileCount == 1) { // 1마리
     item = list[0]; // 에러나면 여기 의심해보기(어쩔 때는 [0][0]여야되는 적이 있음)
   } else { // 2마리 이상
@@ -117,18 +115,17 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 리스트
 
 
   return new Promise((resolve, reject) => { // Promise.all() -> Promise()로 변경 // Promise.all:비동기. 모든 함수의 결과를 기다린 후 하나의 프로미스 객체를 반환
-  console.log('new Promise');
   checkExists(bucketPathList) 
     .then((res1) => { 
-      console.log('checkExists - res1 : %o', res1); 
+      logger.info(`checkExists() 결과: \n${JSON.stringify(res1, null, 2)}`);
       return deleteFiles(bucketPathList_exist); 
     })
     .then((res2) => {
-      console.log('deleteFiles - %o'); // {fvFilename, svFilename}
+      logger.info(`deleteFiles() 완료`);
       resolve (0000);
     })
     .catch((err) => {
-      console.log('err:'+err)
+      logger.warn(`checkExists() 또는 deleteFiles() error: \n${JSON.stringify(err, null, 2)}`);
       resolve (9999); 
     });
   });
@@ -145,12 +142,11 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 리스트
           new Promise((resolve, reject) => {
             s3.headObject(value, function (err, exists_data) {
               if (err) {
-                logger.error(`File ${value.Key} does not exist.`);
+                logger.warn(`File ${value.Key} does not exist.`);
                 reject(err);
               } else {
-                logger.error(`File ${value.Key} exists. checking...`);
+                logger.info(`File ${value.Key} exists. checking...and list push`);
                 bucketPathList_exist.push(value);
-                console.log('존재 bucketPathList_exist : %o', bucketPathList_exist);
 
                 if (exists_data == null) {
                   reject(new Error(`File ${value.Key} does not exist.`));
@@ -158,21 +154,22 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 리스트
                   resolve(exists_data);
                 }
               }
-              console.log('headObject() exists_data: %o', exists_data);
+              logger.info(`존재하는 사진파일 exists_data: \n${JSON.stringify(exists_data, null, 2)}`);
             });
           })
-          );
+        );
       }
     });
-    
-    console.log('랭스promises.length: %o', promises.length);
+
+    logger.info(`반려견 마리 수: ${fileCount}`); 
+    logger.info(`promises안에 담겨져서 존재하는지 조회할 파일 갯수: ${promises.length}`); 
     return Promise.all(promises)
       .then((res) => {
-        console.log('All files exist. Deleting...');
+        logger.info('All files exist. Deleting...');
         return res;
       })
       .catch((err) => {
-        console.log('File does not exist. Cannot delete.');
+        logger.warn('File does not exist. Cannot delete.');
         throw err;
       });
   }
@@ -180,21 +177,19 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 리스트
 
   // 여러 오브젝트 삭제
   function deleteFiles(bucketPathList) {
-    console.log('deleteFiles() 입장 Bucket:', bucketPathList);
-    console.log('deleteFiles() 입장 bucketPathList.length:', bucketPathList.length);
-    return new Promise((resolve, reject) => {
-      
+    logger.info(`deleteFiles() 삭제할 파일 갯수: \n${JSON.stringify(bucketPathList.length, null, 2)}`);
+    
+    return new Promise((resolve, reject) => {  
       Promise.all([ // 경로마다 삭제요청을 별로도 해야함 
         bucketPathList.forEach((value, index, array) => {
-          console.log('index:', index);
           s3.deleteObjects(pramsForDeleteObjects(bucketPathList, index)).promise()
         })
 
       ]).then(delete_data => {
-        console.log(`File deleted successfully.`);  // 조회O 삭제O
+        logger.info(`File deleted successfully.`); // 조회O 삭제O
         resolve(delete_data);
       }).catch(err => {
-        console.log('err:', err.stack);
+        logger.warn(`deleteFiles() err: \n${JSON.stringify(err.stack, null, 2)}`);
         reject(err); // catch문으로 이동
       });
     });
@@ -228,16 +223,13 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 리스트
 
 //반려견 앞모습, 옆모습사진 파일명, S3 파일경로 DB에 저장
 dogMng.prototype.insertDogPhoto = async (query) => {
-  console.log('반려견 앞모습, 옆모습사진 파일명:', query);
  
   // 중복! 테스트할 때만 실행시키기
   if (query.dogId == '-1') {
-    console.log('-1이다'); 
-    console.log('query : %o', query);
-    console.log('query.dogId : %o', query.dogId);
+    logger.warn(`dogId가 -1인경우`);
+    logger.warn(`query: ${JSON.stringify(query, null, 2)}`);
     query.dogId = await getDogId(42); // 제일 최근 등록된 강아지id가져오기
-    console.log('query.dogId : %o', query.dogId);
-    console.log('dogId 다음에 위치하기');
+    logger.warn(`제일 최근 등록된 강아지id가져오기 - dogId: ${query.dogId}`);
   } 
 
   let sql;
@@ -253,40 +245,30 @@ dogMng.prototype.insertDogPhoto = async (query) => {
       [query.filename, query.path, query.dogId],
       (err, rows) => {
         if (err) {
-          console.log(err)
-          console.log('에러다~~!!~!~!')
+          logger.warn(`DOG 테이블 UPDATE 에러: ${JSON.stringify(err, null, 2)}`);
           return resolve(9999);
         } else {
-          // console.log('ㅇㅇㅇ:', rows); 
           return resolve(rows);
-          // 중복! 테스트할 때만 임시주석
-          // if (rows.changedRows == 1) { // changedRows : 0 update한게없음
-          //   return resolve(rows);
-          // } else {
-          //   return resolve('undefined'); 
-          // }
       }
     })
   })
   
   async function getDogId(user_id) {
-    console.log('getDogId()입장', user_id);
     const sql = `SELECT dog_id FROM DOG where user_id = ?
                   ORDER BY dog_id DESC
                   LIMIT 1`;
     const dogId = await new Promise((resolve, reject) => {
       connection.query(sql, [user_id], (err, rows) => {
-        console.log('try rows_2 : %o', rows);
+        logger.info(`getDogId() DOG 테이블 최신 강아지id 선택 결과: ${JSON.stringify(rows, null, 2)}`);
         if (err) {
-          console.log('err,', err)
+          logger.warn(`DOG 테이블 SELECT 에러: ${JSON.stringify(err, null, 2)}`);
           resolve(9999);
         } else {
-          console.log('dogId..: %o', rows[0].dog_id)
           resolve(rows[0].dog_id);
         }
       });
     });
-    console.log('dogId :', dogId)
+    logger.info(`최신 등록된 강아지 id: ${dogId}`);
     return dogId; // 응답코드뿐만 아니라 회원정보까지 Promise로 리턴
   }
   
@@ -304,7 +286,7 @@ dogMng.prototype.selectDogInfo = (query) => {
       [query.userId, query.breedId],
       (err, rows) => {
       if (err) {
-        console.log(err)
+        logger.warn(`selectDogInfo() 에러: \n${JSON.stringify(err, null, 2)}`);
         return reject(new Error('반려견 사진 정보 DB 저장 오류'));
       } else {
         return resolve(rows);
@@ -324,7 +306,7 @@ dogMng.prototype.insertDogInfo = (query) => {
       [query.dogName, query.userId],
       (err, rows) => {
         if (err) {
-          console.log(err)
+          logger.warn(`insertDogInfo() 에러: \n${JSON.stringify(err, null, 2)}`);
           return resolve(9999);
         } else {
           return resolve(rows.insertId);

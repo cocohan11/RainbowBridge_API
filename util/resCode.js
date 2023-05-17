@@ -40,7 +40,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
           code: '0000',
           message: message
         };
-        logger.error(`최종응답값 : \n${JSON.stringify(result_empty, null, 2)}`);
+        logger.warn(`최종응답값 : \n${JSON.stringify(result_empty, null, 2)}`);
         // logger.error(`[ ${apiName} ] code: 1002 | message: ${message}`)
         res.status(401).json({
           result: result_empty
@@ -57,7 +57,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
           code: '1005',
           message: message
         };
-        logger.error(`최종응답값 : \n${JSON.stringify(result_notExist, null, 2)}`);
+        logger.warn(`최종응답값 : \n${JSON.stringify(result_notExist, null, 2)}`);
         // logger.error(`[ ${apiName} ] code: 1002 | message: ${message}`)
         res.status(200).json({
           result: result_notExist
@@ -74,7 +74,7 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
           code: '9999',
           message: message
         };
-        logger.error(`최종응답값 : \n${JSON.stringify(result_fail, null, 2)}`);
+        logger.warn(`최종응답값 : \n${JSON.stringify(result_fail, null, 2)}`);
         res.status(500).json({
           result: result_fail
         }) 

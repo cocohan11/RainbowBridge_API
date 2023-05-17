@@ -14,7 +14,8 @@ const path = require("path");
 const fs = require('fs');
 // Load the AWS SDK for Node.js
 const AWS = require('aws-sdk');
-
+//winston을 이용해 로그를 남기는 처리
+const logger = require('../config/winston');
 
 
 /**
@@ -53,14 +54,14 @@ const allowedExtensions = ['.png', '.jpg', '.jpeg', '.bmp']
  */
 router.post('/breed', async (req, res) => {
   const apiName = '견종명 등록';
-  console.log('req.body: %o', req.body);
+  logger.info(`${apiName} API`);
+  logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
   if (!req.body.dogId || !req.body.breedName) {
     return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
-
-  const rows = await dogMngDB.updateDogBreed(req.body);
-  console.log('rows: %o', rows);
+  const rows = await dogMngDB.updateDogBreed(req.body); // 응답코드 리턴
+  logger.info(`updateDogBreed() 결과 응답코드: ${rows}`); 
   if (rows == 0000) {
     return resCode.returnResponseCode(res, 0000, apiName, null, null);
   } else if (rows == 9999) {
@@ -83,20 +84,19 @@ const frontImageUploader = multer({
     bucket: process.env.S3_BUCKET_PHOTO+'/front', //생성할 버킷 디렉토리
     key: (req, file, callback) => {
 
-      console.log('frontImageUploader 호출');
-      // console.log('req: %o',req);
+      logger.info(`frontImageUploader 호출`);
       const newFilename = `${Date.now()}_${file.originalname}.jpeg`; // 
       req.body.filename = newFilename; // 파일 이름을 req.body.filename에 저장
-      console.log(`newFilename: ${newFilename}`);
+      logger.info(`newFilename: ${newFilename}`);
       callback(null, newFilename); // 파일 이름 반환
 
       //extname = 경로의 마지막 '.'에서 마지막 부분의 문자열 끝까지의 확장을 반환합니다. 
       // 경로의 마지막 부분에 '.'가 없거나 경로의 첫 번째 문자가 '.'인 경우 빈 문자열을 반환합니다.
       const extenstion  = path.extname(newFilename)
-      console.error(`extenstion : ${extenstion}`);
+      logger.error(`extenstion : ${extenstion}`);
       //extion을 확인하기 위한 코드로 없어도 무관함. 허용되지 않는 확장자면 에러발생됨.
       if (!allowedExtensions.includes(extenstion)) {
-        console.error('frontImageUploader error: 파일의 확장자가 없습니다.')
+        logger.error('frontImageUploader error: 파일의 확장자가 없습니다.')
         //23.4.13 위) next함수를 써서 에러핸들링 되도록 시도했지만 실패
         //next란, next(err)는 현재 미들웨어에서 발생한 에러를 다음 미들웨어에 전달하는 역할
         //next 함수를 호출해 인자로 전달되는 에러객체를 app.use에 정의한 에러핸들러의 매개변수로 전달한다
@@ -117,21 +117,20 @@ const sideImageUploader = multer({
     bucket: process.env.S3_BUCKET_PHOTO+'/side', //생성한 버킷이름
     key: (req, file, callback) => {
 
-      console.log('sideImageUploade 호출');
+      logger.info('sideImageUploade 호출');
       const newFilename = `${Date.now()}_${file.originalname}.jpeg`; //안드로이드에서 파일 확장자가 전달되지 않아 확장자를 임의로 생성함.
       req.body.filename = newFilename; // 파일 이름을 req.body.filename에 저장
-      console.log(`newFilename: ${newFilename}`);
+      logger.info(`newFilename: ${newFilename}`);
       callback(null, newFilename); // 파일 이름 반환
 
       //extname = 경로의 마지막 '.'에서 마지막 부분의 문자열 끝까지의 확장을 반환합니다. 경로의 마지막 부분에 '.'가 없거나 경로의 첫 번째 문자가 '.'인 경우 빈 문자열을 반환합니다.
       const extenstion  = path.extname(newFilename)
-      console.error(`extenstion : ${extenstion}`);
-      console.log('extenstion:', extenstion);
+      logger.info(`extenstion : ${extenstion}`);
       if (!allowedExtensions.includes(extenstion)) { //extion을 확인하기 위한 코드로 없어도 무관함. 허용되지 않는 확장자면 에러발생됨.
-        console.error('파일의 확장자가 없습니다.');
+        logger.error('파일의 확장자가 없습니다.');
         return callback(new Error('wrong extenstion'))
       }
-      console.log('S3 업로드 실행');
+      logger.info('S3 업로드 실행');
     },
     ContentType: multerS3.AUTO_CONTENT_TYPE,
     acl: 'public-read-write' //권한 관련 설정
@@ -150,18 +149,20 @@ router.post('/confirm/front/photo',
                                           // 사용자가 전송한 데이터에 파일이 포함되어 있다면 가공해서 req객체에 file이라는 프로포티를 약속하는 함수 
   async (req, res) => {
     const apiName = '반려견 정보 등록';
-    console.log('req.body: %o', req.body)
+    logger.info(`${apiName} API`);
+    logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
+
     if (!req.file || !req.body.dogId || !req.body.type) {
       return resCode.returnResponseCode(res, 1002, apiName, null, null); 
     }
     
     //클라이언트로부터 이미지 파일을 전달받는다.
     const file = req.file;
-    console.log('file값 확장자와 날짜들어간 이름 확인: %o', req.body.filename)
+    logger.info(`file값 확장자와 날짜들어간 이름 확인: ${req.body.filename}`);
 
     req.body.path = file.location
-    console.log('req.body.filename 값 확인 >>> ', req.body.filename); // '1682763409672_168113book.jpeg'
-    console.log('req.body.path 값 확인 >>> ', req.body.path);
+    logger.info(`req.body.filename 값 확인 >>>: ${req.body.filename}`); // '1682763409672_168113book.jpeg'
+    logger.info(`req.body.path 값 확인 >>>: ${req.body.path}`); 
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
@@ -186,19 +187,19 @@ router.post('/confirm/side/photo',
   
   async (req, res) => {
     const apiName = '반려견 정보 등록';
-    console.log('api 호출');
+    logger.info(`${apiName} API`);
+    logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
+    logger.info(`POST 파일: \n${JSON.stringify(req.file, null, 2)}`);
+
     if (!req.file || !req.body.dogId || !req.body.type) {
-      console.log(`file:${req.file}, dogId:${req.body.dogId}, type:${req.body.type}`);
       return resCode.returnResponseCode(res, 1002, apiName, null, null); 
     }
 
     //클라이언트로부터 이미지 파일을 전달받는다.
     const file = req.file;
-    console.log('file값 확장자와 날짜들어간 이름 확인: %o', req.body.filename)
-
     req.body.path = file.location
-    console.log('req.body.filename 값 확인 >>> ', req.body.filename); // '1682763409672_168113book.jpeg'
-    console.log('req.body.path 값 확인 >>> ', req.body.path);
+    logger.info(`req.body.filename 값 확인 >>>: \n${req.body.filename}`);
+    logger.info(`req.body.path 값 확인 >>>: \n${req.body.path}`);
 
     const rows = await dogMngDB.insertDogPhoto(req.body);
     if (rows == 9999) {
@@ -228,23 +229,25 @@ router.post('/confirm/side/photo',
  * @route {DELETE} api/dog/model/userId
  */
 router.delete('/model/:userId?', async (req, res) => {
-  const apiName = '3D 모델 삭제';
+  const apiName = '3D 반려견 모델 삭제';
   const userId = req.params.userId;
-  console.log('userId 값 확인:', userId);
+  logger.info(`${apiName} API`);
+  logger.info(`DELETE 파라미터: \n${JSON.stringify(req.params, null, 2)}`);
+
   if (!userId) {
     return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
   
   // 반려견 재생성을 위해 DB에서 기존 강아지정보 삭제
   const list = await dogMngDB.deleteDogForRemake(userId); // 삭제할 파일 이름들
-  console.log('~~list: %o', list); // err -> list:false
+  logger.info(`삭제할 파일 이름들(실패시 false): \n${JSON.stringify(list, null, 2)}`); // err -> list:false
   if (!list) { 
     return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } 
 
   // S3에서 사진 삭제하기
   const data = await dogMngDB.deleteDogImage(s3, list); 
-  console.log('S3에서 사진 삭제하기 data:', data); 
+  logger.info(`S3에서 사진 삭제하기(응답코드): \n${JSON.stringify(data, null, 2)}`); // err -> list:false
   if (data == 0000) { // 파일 삭제 true OR false
     return resCode.returnResponseCode(res, 0000, apiName, null, null);
 
@@ -252,7 +255,7 @@ router.delete('/model/:userId?', async (req, res) => {
     return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } 
 
-  console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
+  logger.info(`그 외 기타 에러코드는 9999로 귀결`); 
   resCode.returnResponseCode(res, 9999, apiName, null, null);
 })
 
@@ -263,17 +266,19 @@ router.delete('/model/:userId?', async (req, res) => {
  */
 router.post('/create', async (req, res) => {
   const apiName = '반려견 정보 등록';
-  console.log('req.body: %o', req.body);
+  logger.info(`${apiName} API`);
+  logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
+  
   if (!req.body.userId || !req.body.dogName) {
     return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
-  const rows = await dogMngDB.insertDogInfo(req.body);
-  console.log('rows: %o', rows);
-  if (rows == 9999) {
-    return resCode.returnResponseCode(res, 9999, apiName, null, null);
+
+  const row = await dogMngDB.insertDogInfo(req.body); // 리턴:dogId
+  logger.info(`insertDogInfo()의 리턴 dogId: \n${JSON.stringify(row, null, 2)}`);
+  if (row == 9999) {
+    return resCode.returnResponseCode(row, 9999, apiName, null, null);
   } else {
-    // 
-    const plusResult = { dogId: rows } ; // dogId로 변경됨
+    const plusResult = { dogId: res } ; // dogId로 변경됨
     return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // insert_id 알고싶으면 null 대신 'addToResult' 넣기
   }
 })

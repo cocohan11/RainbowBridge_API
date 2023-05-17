@@ -51,7 +51,7 @@ router.get('/test', async (req, res) => {
   
   connection.query(sql, (err, rows) => {
     if (err) {
-      console.log(err);
+      logger.error(`샘플 에러: \n${JSON.stringify(err, null, 2)}`);
     } else {
       message = '회원가입에 성공했습니다.';
     }
@@ -73,7 +73,7 @@ router.post('/leave', async (req, res) => {
 
   // 파라미터값 누락 확인
   if (!req.body.email|| !req.body.leaveReasonNum || !req.body.userId) { // POST는 비어있으면 다음과 같이 값을 넣어 반환 { email: 2, leaveReasonNum: 1, userId: 1 }
-    resCode.returnResponseCode(res, 1002, apiName, null, null);
+    return resCode.returnResponseCode(res, 1002, apiName, null, null);
   }
 
   // DB에서 회원정보 UPDATE, 강아지정보 DELETE
@@ -81,12 +81,12 @@ router.post('/leave', async (req, res) => {
   const list = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body); // 삭제할 사진이름 알아내기
   logger.info(`updateMemberAndDeleteDogForLeave() 리턴값(4장의 사진명): \n${JSON.stringify(list, null, 2)}`); // 4장의 사진명
   if (list == 1005) {
-    resCode.returnResponseCode(res, 1005, apiName, null, null);
+    return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else if (list == 9999) {
-    resCode.returnResponseCode(res, 9999, apiName, null, null);
+    return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else if (list == 'undefined') { // 반려견등록을 한 번도 등록한 적 없다면 undefined가 뜸 -> 0000
     logger.info(`반려견 0마리`); // 4장의 사진명
-    resCode.returnResponseCode(res, 0000, apiName, null, null);
+    return resCode.returnResponseCode(res, 0000, apiName, null, null);
   }
   
   // S3에서 강아지사진 삭제하기
@@ -94,16 +94,16 @@ router.post('/leave', async (req, res) => {
   if (list[0] != null || list != undefined) {
     logger.info(`반려견 최소 1마리`); 
     if (list[0].fvFilename != null) {
-      resCode.returnResponseCode(res, 9999, apiName, null, null);
+      return resCode.returnResponseCode(res, 9999, apiName, null, null);
     }
     const data = await dogMngDB.deleteDogImage(s3, list); 
     logger.info(`deleteDogImage() 리턴값: ${data}`); 
     if (data == 0000) { 
-      resCode.returnResponseCode(res, 0000, apiName, null, null);
+      return resCode.returnResponseCode(res, 0000, apiName, null, null);
     } else if (data == 9999) {
-      resCode.returnResponseCode(res, 9999, apiName, null, null);
+      return resCode.returnResponseCode(res, 9999, apiName, null, null);
     } else if (data == 1005) {
-      resCode.returnResponseCode(res, 1005, apiName, null, null);
+      return resCode.returnResponseCode(res, 1005, apiName, null, null);
     }
   }
 

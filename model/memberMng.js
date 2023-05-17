@@ -60,7 +60,7 @@ memberMng.prototype.selectMemberList = () => {
       //throw error test
       //return reject(new Error('member error !!!'));
       if (err) {
-        console.log(err)
+        logger.warn(`샘플 에러: ${err}`)
         return reject(new Error('회원조회 오류 발생 !!!'));
       } else {
         message = '회원가입에 성공했습니다.';
@@ -99,10 +99,10 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
   return new Promise((resolve, reject) => {
     mySQLQuery(updateMemberInfo) // 쿼리1 실행
     .then((res1) => { // res:mySQLQuery의 결과 
-  if (res1.changedRows == 1) { // 수정) changedRows값이 0이 아닌걸로 조건문 수정하기
-        logger.info(`MEMBER테이블 변경 성공. DOG테이블에서 강아지정보삭제해라.`);
-        return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
-                                      // 해결) return mySQLQuery(deleteDog); 추가
+      if (res1.changedRows == 1) { // 수정) changedRows값이 0이 아닌걸로 조건문 수정하기
+            logger.info(`MEMBER테이블 변경 성공. DOG테이블에서 강아지정보삭제해라.`);
+            return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
+                                          // 해결) return mySQLQuery(deleteDog); 추가
       } else {
         return resolve(1005); 
       }
@@ -110,14 +110,14 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
     .then((res2) => {
       // logger.info(`DOG테이블 삭제 성공. 사진4개: ${res2[0][0]}`); // {fvFilename, svFilename ..}
       if (res2[0][0] == undefined) { // 반려견등록을 한 번도 한 전 없다면 undefined가 뜸 -> 0000
-        logger.info(`반려견등록을 한 번도 한 전 없다.`);
+        logger.info(`반려견등록을 한 번도 한 적 없다.`);
         return resolve('undefined');
       } else {
         return resolve([res2[0][0]]);
       }
     })
     .catch((err) => {
-      console.log('err:'+err)
+      logger.warn(`쿼리 updateMemberInfo 또는 deleteDog 에러 : \n${JSON.stringify(err, null, 2)}`);
       return resolve(9999); 
     });
   });
@@ -208,7 +208,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
                   resolve(res3[0]);
                 })
                 .catch(err => {
-                  logger.error(`selectMemberByEmail() 에러 : \n${JSON.stringify(err, null, 2)}`);
+                  logger.warn(`selectMemberByEmail() 에러 : \n${JSON.stringify(err, null, 2)}`);
                   reject(err);
                 });
               
@@ -216,19 +216,19 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
               getMemberInfo(0, user_id) 
               .then(res3 => { resolve(res3[0]); })
                 .catch(err => {
-                  logger.error(`selectMemberByEmail() 에러 : \n${JSON.stringify(err, null, 2)}`);
+                  logger.warn(`selectMemberByEmail() 에러 : \n${JSON.stringify(err, null, 2)}`);
                   reject(err);
                 });
             } else { resolve(9999); }
           })
             .catch(err => {
-              logger.error(`selectMemberByEmail() 에러 : \n${JSON.stringify(err, null, 2)}`);
+              logger.warn(`selectMemberByEmail() 에러 : \n${JSON.stringify(err, null, 2)}`);
               reject(err);
             });
       }
     })
       .catch((err) => {
-        logger.error(`selectMemberByEmail() 에러 : \n${JSON.stringify(err, null, 2)}`);
+        logger.warn(`selectMemberByEmail() 에러 : \n${JSON.stringify(err, null, 2)}`);
       });
   });
   
@@ -247,7 +247,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
     const rows_2 = await new Promise((resolve, reject) => {
       connection.query(sql_2, [isModelCreated, user_id], (err, rows) => {
         if (err) {
-          logger.error(`getMemberInfo() 에러 : \n${JSON.stringify(err, null, 2)}`);
+          logger.warn(`getMemberInfo() 에러 : \n${JSON.stringify(err, null, 2)}`);
           resolve(9999);
         } else {
           if (!rows) resolve(1005);
@@ -274,23 +274,6 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
           } else {
             resolve(camelcaseKeys([result]));
           }
-
-          //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-          // 임시! 위에 코드 지우고 주석풀기
-          // if (rows.length == 1) { 
-          //   resolve(camelcaseKeys(rows));
-          //   console.log('11')
-
-          // } else if (rows.length == 0) {
-          //   console.log('22')
-          //   console.log('res :%o', res)
-          //   resolve(camelcaseKeys(res)); // 중복! 테스트끝나면 주석처리하기
-          // } else {
-          //   console.log('33')
-          //   let result = [rows[rows.length - 1]]; // []로 감싸기
-          //   console.log('result :%o', result)
-          //   resolve(camelcaseKeys(result));`
-          // }
         }
       });
     });
@@ -330,7 +313,7 @@ memberMng.prototype.insertNewMember = (query) => {
         return resolve(res.insertId);
       })
       .catch((err) => {
-        logger.error(`insertNewMember() err: ${err} `);
+        logger.warn(`insertNewMember() err: ${err} `);
       return resolve(9999); 
       });
     }); 
@@ -352,7 +335,7 @@ memberMng.prototype.insertNewMember = (query) => {
         return resolve(res2.insertId); 
       })
       .catch((err) => {
-        logger.error(`insertNewMember() err: ${err} `);
+        logger.warn(`insertNewMember() err: ${err} `);
         return resolve(9999); 
       });
     });
@@ -378,13 +361,13 @@ async function checkExists(s3, item) { // 수정예정
         s3.headObject(value, function (err, exists_data) { // 1개일때만 조회됨
 
           if (err) {
-            logger.error(`File ${value.Key} does not exist.`);
+            logger.warn(`File ${value.Key} does not exist.`);
             resolve(false); // 사진없음
           } else {
             logger.info(`File ${value.Key} exists. checking...`);
 
             if (exists_data == null) {
-              logger.error(`File ${value.Key} does not exist.`);
+              logger.warn(`File ${value.Key} does not exist.`);
               reject(`File ${value.Key} does not exist.`);
             } else {
               resolve(true); // 사진있음
@@ -405,7 +388,7 @@ async function checkExists(s3, item) { // 수정예정
       }
     })
     .catch((err) => {
-      logger.error('File does not exist. Cannot delete.');
+      logger.warn('File does not exist. Cannot delete.');
       throw err;
     });
 }
