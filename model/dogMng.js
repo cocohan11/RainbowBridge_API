@@ -4,6 +4,7 @@ const memberMng = require('./memberMng');
 //카멜케이스로 DB컬럼값을 응답하기 위한 모듈 선언
 const camelcaseKeys = require('camelcase-keys');
 const connection = dbPool.init();
+const logger = require('../config/winston');
 
 
 let message; //응답 메세지 전역변수 선언
@@ -89,27 +90,22 @@ dogMng.prototype.deleteDogForRemake = (userId) => {
 
 
 // 반려견 사진 4장 유무조회와 삭제하기 (일반 앞, 일반 옆, 텍스처 앞, 텍스처 옆) 
-dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리스트
-  console.log('prototype.deleteDogImage() 입장');
-
-  // 버킷 정보
+dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 리스트
+  console.log(list);
+  
+  // 사진파일명 리스트
   let item = ''
   let fileCount = list.length;
-  console.log('fileCount :', fileCount);
-  if (list.length == 1) {
+  logger.info(`존재하는 파일갯수: ${fileCount}`); 
+  if (fileCount == 1) { // 1마리
     item = list[0]; // 에러나면 여기 의심해보기(어쩔 때는 [0][0]여야되는 적이 있음)
-  } else {
-    console.log('else');
+  } else { // 2마리 이상
     item = list[fileCount-1]; // 에러나면 여기 의심해보기(어쩔 때는 [0][0]여야되는 적이 있음)
-    console.log('list[0]', item);
   }
-  console.log('파일명 있는 것만 삭제하기 :', item);
-    // return 1005; // 응답코드
-    // 값이 있는 것만 삭제하기
-  console.log('bucketPathList에 push할거임');
+
+  // 버킷 정보
   let bucketPathList = []; 
   let bucketPathList_exist = [];
-
   if (item.fvFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_PHOTO, Key: `front/${item.fvFilename}` })
     else bucketPathList.push(null);
   if (item.svFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_PHOTO, Key: `side/${item.svFilename}` })
@@ -118,9 +114,6 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
     else bucketPathList.push(null);
   if (item.svTxtFilename) bucketPathList.push({ Bucket: process.env.S3_BUCKET_TEXTURE_PHOTO, Key: `side/${item.svTxtFilename}` })
     else bucketPathList.push(null);
-  console.log('bucketPathList : ', bucketPathList);
-
-
 
 
   return new Promise((resolve, reject) => { // Promise.all() -> Promise()로 변경 // Promise.all:비동기. 모든 함수의 결과를 기다린 후 하나의 프로미스 객체를 반환
@@ -142,23 +135,20 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 담긴 리�
 
 
   function checkExists(bucketPathList) {
-    console.log('checkExists() 입장');
+    logger.info('파일명으로 S3에 사진있는지 조회하기 checkExists()');
     const promises = [];
 
     bucketPathList.forEach((value, index, array) => {
-    console.log('forEach index: %o', index);
-    console.log('forEach() value: %o', value);
-
       // 1개씩 조회
       if (value != null) {
         promises.push(
           new Promise((resolve, reject) => {
             s3.headObject(value, function (err, exists_data) {
               if (err) {
-                console.log(`File ${value.Key} does not exist.`);
+                logger.error(`File ${value.Key} does not exist.`);
                 reject(err);
               } else {
-                console.log(`File ${value.Key} exists. checking...`);
+                logger.error(`File ${value.Key} exists. checking...`);
                 bucketPathList_exist.push(value);
                 console.log('존재 bucketPathList_exist : %o', bucketPathList_exist);
 

@@ -77,35 +77,37 @@ router.post('/leave', async (req, res) => {
   }
 
   // DB에서 회원정보 UPDATE, 강아지정보 DELETE
+  logger.info(`DB에서 회원정보 UPDATE, 강아지정보 DELETE`); 
   const list = await memberMngDB.updateMemberAndDeleteDogForLeave(req.body); // 삭제할 사진이름 알아내기
-  logger.info(`updateMemberAndDeleteDogForLeave() 리턴값: \n${JSON.stringify(list, null, 2)}`);
+  logger.info(`updateMemberAndDeleteDogForLeave() 리턴값(4장의 사진명): \n${JSON.stringify(list, null, 2)}`); // 4장의 사진명
   if (list == 1005) {
     resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else if (list == 9999) {
     resCode.returnResponseCode(res, 9999, apiName, null, null);
-  } else if (list == 'undefined') { // 반려견등록을 한 번도 한 전 없다면 undefined가 뜸 -> 0000
+  } else if (list == 'undefined') { // 반려견등록을 한 번도 등록한 적 없다면 undefined가 뜸 -> 0000
+    logger.info(`반려견 0마리`); // 4장의 사진명
     resCode.returnResponseCode(res, 0000, apiName, null, null);
   }
   
-  // S3에서 사진 삭제하기
-  console.log('list:', list); 
+  // S3에서 강아지사진 삭제하기
+  logger.info(`S3에서 강아지사진 삭제하기`); 
   if (list[0] != null || list != undefined) {
-    if(list[0].fvFilename != null) {
+    logger.info(`반려견 최소 1마리`); 
+    if (list[0].fvFilename != null) {
       resCode.returnResponseCode(res, 9999, apiName, null, null);
     }
     const data = await dogMngDB.deleteDogImage(s3, list); 
-    console.log('S3에서 사진 삭제하기 data:', data); 
-    if (data == 0000) { // 파일 삭제 true OR false
+    logger.info(`deleteDogImage() 리턴값: ${data}`); 
+    if (data == 0000) { 
       resCode.returnResponseCode(res, 0000, apiName, null, null);
     } else if (data == 9999) {
       resCode.returnResponseCode(res, 9999, apiName, null, null);
-    } else if (data == 9999) {
+    } else if (data == 1005) {
       resCode.returnResponseCode(res, 1005, apiName, null, null);
     }
   }
-  
 
-  console.log('그 외 기타 에러코드'); // 에러코드는 여기로 귀결
+  logger.info(`그 외 기타 에러코드는 9999로 귀결`); 
   resCode.returnResponseCode(res, 9999, apiName, null, null);
 })
 

@@ -76,12 +76,9 @@ memberMng.prototype.selectMemberList = () => {
 // 1. 쿼리1) DB에서 회원탈퇴 처리
 // 2. 쿼리2) DB에서 강아지정보 삭제
 memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
-  console.log('..query : %o', query); 
   if (!query.leaveReasonCtx) {
     query.leaveReasonCtx = null;
   }
-  console.log('..query.leaveReasonCtx : %o', query.leaveReasonCtx);
-  
   // 쿼리1. 회원탈퇴 처리
   const updateMemberInfo = {
     text: `UPDATE MEMBER 
@@ -102,9 +99,8 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
   return new Promise((resolve, reject) => {
     mySQLQuery(updateMemberInfo) // 쿼리1 실행
     .then((res1) => { // res:mySQLQuery의 결과 
-      console.log('res1 : %o', res1);
-      console.log('res1 changedRows: %o', res1.changedRows); // 쿼리2 실행
-      if (res1.changedRows == 1) { // 수정) changedRows값이 0이 아닌걸로 조건문 수정하기
+  if (res1.changedRows == 1) { // 수정) changedRows값이 0이 아닌걸로 조건문 수정하기
+        logger.info(`MEMBER테이블 변경 성공. DOG테이블에서 강아지정보삭제해라.`);
         return mySQLQuery(deleteDog); // 문제) 두 번째 쿼리의 에러발생시 catch문으로 안 가고 동작이 멈춰버렸음
                                       // 해결) return mySQLQuery(deleteDog); 추가
       } else {
@@ -112,10 +108,9 @@ memberMng.prototype.updateMemberAndDeleteDogForLeave = (query) => {
       }
     })
     .then((res2) => {
-      console.log('res2 ㅡㅡ : %o', res2); // {fvFilename, svFilename ..} 
-      console.log('res2[0][0]!! ㅡㅡ : %o', res2[0][0]); // {fvFilename, svFilename ..}
+      // logger.info(`DOG테이블 삭제 성공. 사진4개: ${res2[0][0]}`); // {fvFilename, svFilename ..}
       if (res2[0][0] == undefined) { // 반려견등록을 한 번도 한 전 없다면 undefined가 뜸 -> 0000
-        console.log('undefined 나옴'); 
+        logger.info(`반려견등록을 한 번도 한 전 없다.`);
         return resolve('undefined');
       } else {
         return resolve([res2[0][0]]);
@@ -402,8 +397,7 @@ async function checkExists(s3, item) { // 수정예정
   
   return Promise.all(promises)
     .then((res) => {
-      console.log('res: %o', res);
-      logger.info(`사용자가 전송한 사진 존재유무: ${res[0]}, 텍스처 사진 존재유무 : ${res[1]}`);
+      logger.info(`사진유무) 1.사용자가 전송한 사진 앞:${res[0]} 2.뒤:${res[1]} 3.텍스처사진 얼굴:${res[2]} 4.몸:${res[3]}`);
       if (res[0] == true && res[1] == true && res[2] == true && res[3] == true) { // 회원조회할 때 사진 4개다 있으면 isModelCreated값이 1로 리턴한다.
         return 0000;
       } else {
