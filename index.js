@@ -81,7 +81,7 @@ const port = process.env.PORT
 
 //위) 로그 테스트용이니 지우지 말고 남겨두세요. 제가 최종적으로 지우겠습니다.
 logger.debug('debug >>>>>> 서비스 재배포 테스트~!!');
-logger.info('info test');
+logger.info('info >>>>>>>>> 서비스 재배포 테스트~!!');
 logger.warn('warning test');
 logger.error('error test');
 
