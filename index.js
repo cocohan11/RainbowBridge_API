@@ -39,6 +39,10 @@ class MissingParameterError extends Error {}
 class ResponseEmptyError extends Error {}
 class CommonError extends Error {}
 
+//
+const { swaggerUi, specs } = require("./swagger/swagger")
+
+
 app.use(morgan(morganFormat, {stream : logger.stream})); // morgan 로그 설정 
 
 
@@ -55,6 +59,9 @@ app.use('/util', express.static(path.join(__dirname, 'util')));
 
 //주소 뒤에 ?p 만 붙여주면 알아서 이쁘게 나온다.
 app.use(pretty({ query: 'p' }));
+
+//
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs))
 
 
 let envFilePath;

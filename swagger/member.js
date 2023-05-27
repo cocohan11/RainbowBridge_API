@@ -4,7 +4,7 @@
  * /api/member/leave:
  *  post:
  *    summary: "회원탈퇴 정보변경"
- *    description: "ddd"
+ *    description: "사용자 정보가 변경되고 강아지의 모든 정보가 삭제됩니다."
  *    tags: [member]
  *    requestBody:
  *      description: 사용자가 서버로 전달하는 값에 따라 결과 값은 다릅니다. (유저 등록)
@@ -39,13 +39,14 @@
  */
 
 
-
 /**
  * @swagger
  * /api/member/{email}:
  *  get:
  *    summary: "회원정보조회"
- *    description: "로그인할 때 쓴다 // isModelCreated:1 -> 이 사용자는 텍스처까지 생성된 반려견 모델이 있다."
+ *    description: |
+ *      로그인할 때 쓴다.
+ *      isModelCreated:1 -> 이 사용자는 텍스처까지 생성된 반려견 모델이 있다.
  *    tags: [member]
  *    parameters:
  *      - in: path
@@ -96,10 +97,8 @@
  * /api/member/join:
  *  post:
  *    summary: "회원정보 가입"
- *    description: "ddd"
  *    tags: [member]
  *    requestBody:
- *      description: aaa
  *      required: true
  *      content:
  *        application/x-www-form-urlencoded:

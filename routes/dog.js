@@ -147,7 +147,7 @@ router.post('/confirm/front/photo',
   frontImageUploader.single('facePhoto'), // single()가먼저 실행됨.
                                           // 사용자가 전송한 데이터에 파일이 포함되어 있다면 가공해서 req객체에 file이라는 프로포티를 약속하는 함수 
   async (req, res) => {
-    const apiName = '반려견 정보 등록';
+    const apiName = '반려견 앞모습 인풋사진 저장';
     logger.info(`${apiName} API`);
     logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
 
@@ -185,7 +185,7 @@ router.post('/confirm/side/photo',
   sideImageUploader.single('bodyPhoto'),
   
   async (req, res) => {
-    const apiName = '반려견 정보 등록';
+    const apiName = '반려견 옆모습 인풋사진 저장';
     logger.info(`${apiName} API`);
     logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
     logger.info(`POST 파일: \n${JSON.stringify(req.file, null, 2)}`);
