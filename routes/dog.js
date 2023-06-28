@@ -61,8 +61,8 @@ router.post('/breed', async (req, res) => {
 
   const rows = await dogMngDB.updateDogBreed(req.body); // 응답코드 리턴
   logger.info(`updateDogBreed() 결과 응답코드: ${rows}`); 
-  if (rows == 0000) {
-    return resCode.returnResponseCode(res, 0000, apiName, null, null);
+  if (rows == 0) {
+    return resCode.returnResponseCode(res, 0, apiName, null, null);
   } else if (rows == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } 
@@ -170,7 +170,7 @@ router.post('/confirm/front/photo',
       return resCode.returnResponseCode(res, 1005, apiName, null, null);
     } else {
       const plusResult = { filePath: req.body.path }; // 원하는 출력 모양을 만듦
-      return resCode.returnResponseCode(res, 0000, apiName, "addToResult", plusResult); 
+      return resCode.returnResponseCode(res, 0, apiName, "addToResult", plusResult); 
     }
 })
 
@@ -207,7 +207,7 @@ router.post('/confirm/side/photo',
       return resCode.returnResponseCode(res, 1005, apiName, null, null);
     } else {
       const plusResult = { filePath: req.body.path }; // 원하는 출력 모양을 만듦
-      return resCode.returnResponseCode(res, 0000, apiName, "addToResult", plusResult); 
+      return resCode.returnResponseCode(res, 0, apiName, "addToResult", plusResult); 
     }
 })
   
@@ -241,14 +241,14 @@ router.delete('/model/:userId?', async (req, res) => {
   const list = await dogMngDB.deleteDogForRemake(userId); // 삭제할 파일 이름들
   logger.info(`삭제할 파일 이름들(실패시 false): \n${JSON.stringify(list, null, 2)}`); // err -> list:false
   if (!list) { 
-    return resCode.returnResponseCode(res, 0000, apiName, null, null); // 0000이 맞음
+    return resCode.returnResponseCode(res, 0, apiName, null, null); // 0이 맞음
   } 
 
   // S3에서 사진 삭제하기
   const data = await dogMngDB.deleteDogImage(s3, list); 
   logger.info(`S3에서 사진 삭제하기(응답코드): \n${JSON.stringify(data, null, 2)}`); // err -> list:false
-  if (data == 0000) { // 파일 삭제 true OR false
-    return resCode.returnResponseCode(res, 0000, apiName, null, null);
+  if (data == 0) { // 파일 삭제 true OR false
+    return resCode.returnResponseCode(res, 0, apiName, null, null);
 
   } else if (data == 1005) {
     return resCode.returnResponseCode(res, 1005, apiName, null, null);
@@ -278,7 +278,7 @@ router.post('/create', async (req, res) => {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
   } else {
     const plusResult = { dogId: row } ; // dogId로 변경됨
-    return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // insert_id 알고싶으면 null 대신 'addToResult' 넣기
+    return resCode.returnResponseCode(res, 0, apiName, 'addToResult', plusResult); // insert_id 알고싶으면 null 대신 'addToResult' 넣기
   }
 })
 

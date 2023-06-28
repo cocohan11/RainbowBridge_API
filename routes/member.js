@@ -83,9 +83,9 @@ router.post('/leave', async (req, res) => {
     return resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else if (list == 9999) {
     return resCode.returnResponseCode(res, 9999, apiName, null, null);
-  } else if (list == 'undefined') { // 반려견등록을 한 번도 등록한 적 없다면 undefined가 뜸 -> 0000
+  } else if (list == 'undefined') { // 반려견등록을 한 번도 등록한 적 없다면 undefined가 뜸 -> 0
     logger.info(`반려견 0마리`); // 4장의 사진명
-    return resCode.returnResponseCode(res, 0000, apiName, null, null);
+    return resCode.returnResponseCode(res, 0, apiName, null, null);
   }
   
   // S3에서 강아지사진 삭제하기
@@ -97,8 +97,8 @@ router.post('/leave', async (req, res) => {
     }
     const data = await dogMngDB.deleteDogImage(s3, list); 
     logger.info(`deleteDogImage() 리턴값: ${data}`); 
-    if (data == 0000) { 
-      return resCode.returnResponseCode(res, 0000, apiName, null, null);
+    if (data == 0) { 
+      return resCode.returnResponseCode(res, 0, apiName, null, null);
     } else if (data == 9999) {
       return resCode.returnResponseCode(res, 9999, apiName, null, null);
     } else if (data == 1005) {
@@ -133,8 +133,8 @@ router.get('/:email?', async (req, res) => {
   } else if (rows == 1005) {
     resCode.returnResponseCode(res, 1005, apiName, null, null);
   } else {
-    resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows);
-    // return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', rows[0]); // 중복! 테스트할 때만 임시주석
+    resCode.returnResponseCode(res, 0, apiName, 'addToResult', rows);
+    // return resCode.returnResponseCode(res, 0, apiName, 'addToResult', rows[0]); // 중복! 테스트할 때만 임시주석
   }
 })
 
@@ -157,7 +157,7 @@ router.post('/join', async (req, res) => {
     return resCode.returnResponseCode(res, 9999, apiName, null, null); // 이미존재하는 이메일도 9999처리. 1005메세지내용과 맞지않음
   } else {
     const plusResult = { user_id: rows }; // 원하는 출력 모양을 만듦
-    return resCode.returnResponseCode(res, 0000, apiName, 'addToResult', plusResult); // user_id 알고싶으면 null 대신 'addToResult' 넣기
+    return resCode.returnResponseCode(res, 0, apiName, 'addToResult', plusResult); // user_id 알고싶으면 null 대신 'addToResult' 넣기
   }
 })
 
