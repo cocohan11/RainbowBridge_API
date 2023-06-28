@@ -117,33 +117,6 @@
  */
 
 
-/**
- * @swagger
- * /api/dog/model/{userId}:
- *   delete:
- *    summary: "3D 모델 재성성을 위한 강아지삭제"
- *    description: "dogId는 유지되고 강아지의 사진 정보만 삭제됩니다."
- *    tags: [dog]
- *    parameters:
- *      - in: path
- *        name: userId
- *        description: 사용자 id
- *        schema:
- *          type: integer
- *    responses:
- *      "200":
- *        description: 사용자가 서버로 전달하는 값에 따라 결과 값은 다릅니다. (유저 삭제)
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                ok:
- *                  type: boolean
- *                users:
- *                  type: object
- */
-
 
 /**
  * @swagger

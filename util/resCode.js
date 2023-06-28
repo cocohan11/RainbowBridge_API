@@ -10,7 +10,7 @@ function resCode() {
 resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessage) => { // subMessage:특별히 출력한 메세지가있는경우 기입, 없으면 null
     switch (value) {
       
-      case 0000:
+      case 0:
         message = apiName + ' 성공' // ex) 3D 모델 재성성 성공
         const result_success = {
           code: '0000',

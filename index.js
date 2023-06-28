@@ -39,7 +39,7 @@ class MissingParameterError extends Error {}
 class ResponseEmptyError extends Error {}
 class CommonError extends Error {}
 
-//
+// api 문서화 파일위치
 const { swaggerUi, specs } = require("./swagger/swagger")
 
 
@@ -57,10 +57,10 @@ app.use(bodyParser.json()); //request body에 오는 데이터를 json 형식으
 //util경로에 있는 파일들을 읽기위한 처리
 app.use('/util', express.static(path.join(__dirname, 'util')));
 
-//주소 뒤에 ?p 만 붙여주면 알아서 이쁘게 나온다.
+//주소 뒤에 ?p 만 붙여주면 json이 이쁘게 줄바꿈된다.
 app.use(pretty({ query: 'p' }));
 
-//
+//스웨거 경로
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs))
 
 

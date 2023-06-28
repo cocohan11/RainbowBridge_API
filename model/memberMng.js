@@ -201,7 +201,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
         */ 
           checkExists(s3, res2[0]) // 동기처리
           .then(res3 => {
-            if (res3 == 0000) {  
+            if (res3 == 0) {  
               getMemberInfo(1, user_id) // s3에도 존재O
                 .then(res3 => {
                   resolve(res3[0]);
@@ -381,7 +381,7 @@ async function checkExists(s3, item) { // 수정예정
     .then((res) => {
       logger.info(`사진유무) 1.사용자가 전송한 사진 앞:${res[0]} 2.뒤:${res[1]} 3.텍스처사진 얼굴:${res[2]} 4.몸:${res[3]}`);
       if (res[0] == true && res[1] == true && res[2] == true && res[3] == true) { // 회원조회할 때 사진 4개다 있으면 isModelCreated값이 1로 리턴한다.
-        return 0000;
+        return 0;
       } else {
         return 1005; // 사진이 1개라도 조회되지않으면 빈값응답코드 리턴
       }

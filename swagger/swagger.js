@@ -10,10 +10,16 @@ const options = {
       description:
         "앱 개발서버 API문서화 페이지",
     },
-    servers: [
+    servers: [ // 요청 URL
       {
-        url: "http://localhost:3001", // 요청 URL
+        "url": "https://app-dev.api-rainbowbridge.xyz" // 테섭
       },
+      {
+        "url": "http://localhost:3001" 
+      },
+      {
+        "url": "https://app.api-rainbowbridge.xyz" // 실섭
+      }
     ],
   },
   apis: ["./swagger/*.js"], //Swagger 파일 연동
