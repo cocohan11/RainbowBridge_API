@@ -22,6 +22,12 @@ resCode.prototype.returnResponseCode = (res, value, apiName, addField, subMessag
             result_success[key] = subMessage[key];
           }
         }
+        if (addField == 'arraylist') {
+          res.status(200).json({
+            result: subMessage
+          });
+          break;
+        }
 
         logger.info(`최종응답값 : \n${JSON.stringify(result_success, null, 2)}`);
         res.status(200).json({

@@ -30,7 +30,7 @@ dogMng.prototype.updateDogBreed = (query) => {
     memberMng.mySQLQuery(updateDogBreed) 
     .then((res2) => {
       logger.info(`DOG테이블 업데이트 결과: \n${JSON.stringify(res2, null, 2)}`); // 4장의 사진명
-      return resolve(0000); // 미정
+      return resolve(0); // 미정
     })
     .catch((err) => {
       logger.warn(`DOG테이블 업데이트 err: \n${JSON.stringify(err, null, 2)}`); // 작업은 정상적으로 진행되서 error대신 warning사용
@@ -121,7 +121,7 @@ dogMng.prototype.deleteDogImage = (s3, list) => { // list: 사진명 리스트
     })
     .then((res2) => {
       logger.info(`deleteFiles() 완료`);
-      resolve (0000);
+      resolve (0);
     })
     .catch((err) => {
       logger.warn(`checkExists() 또는 deleteFiles() error: \n${JSON.stringify(err, null, 2)}`);
