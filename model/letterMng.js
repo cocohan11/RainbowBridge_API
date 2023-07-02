@@ -4,7 +4,6 @@ const camelcaseKeys = require('camelcase-keys');
 const connection = dbPool.init();
 const logger = require('../config/winston');
 
-
 let message; //응답 메세지 전역변수 선언
 function letterMng() {
 }
@@ -53,14 +52,14 @@ letterMng.prototype.selectPostcards = (query) => {
   // 쿼리: DOG_POSTCARD 테이블에서 이전에 강아지가 보낸 엽서에 대한 정보를 조회한다.
   function selectPostcard(query) {
     return {
-      text: `SELECT * FROM DOG_POSTCARD 
-              WHERE user_id = ? and postcard_id = ? `, 
+      text: `SELECT *, DATE_FORMAT(date_detail, '%Y-%m-%d') AS date FROM DOG_POSTCARD 
+              WHERE user_id = ? `, 
       params: [query.user_id, query.postcard_id] 
     };
   }
   function selectPostcards(query) {
     return {
-      text: `SELECT * FROM DOG_POSTCARD 
+      text: `SELECT *, DATE_FORMAT(date_detail, '%Y-%m-%d') AS date FROM DOG_POSTCARD
               WHERE user_id = ?`, 
       params: [query.user_id] 
     };
@@ -68,32 +67,32 @@ letterMng.prototype.selectPostcards = (query) => {
 
 
   // 엽서 여러장이라면
-  if (query.postcard_id == undefined || query.postcard_id == null) {
-    // 쿼리 실행 결과, 편지id를 리턴한다. 
-    return new Promise((resolve, reject) => {
-      mySQLQuery(selectPostcards(query)) 
-      .then((res) => { 
-        logger.warn(`엽서 res : ${res}`);
-        return resolve(res);
-      }) 
-      .catch((err) => {
-        logger.warn(`selectLetter() err: ${err} `);
-        return resolve(9999); 
-      });
-    }); 
+  if (query.postcard_id == 0) {
+      // 쿼리 실행 결과, 편지id를 리턴한다. 
+      return new Promise((resolve, reject) => {
+        mySQLQuery(selectPostcards(query)) 
+        .then((res) => { 
+          logger.warn(`엽서 여러장 : ${res}`);
+          return resolve(res);
+        }) 
+        .catch((err) => {
+          logger.warn(`selectLetter() err: ${err} `);
+          return resolve(9999); 
+        });
+      }); 
   } else {
-    // 쿼리 실행 결과, 편지id를 리턴한다. 
-    return new Promise((resolve, reject) => {
-      mySQLQuery(selectPostcard(query)) 
-      .then((res) => { 
-        logger.warn(`엽서 res : ${res}`);
-        return resolve(res);
-      }) 
-      .catch((err) => {
-        logger.warn(`selectLetter() err: ${err} `);
-        return resolve(9999); 
-      });
-  }); 
+      // 쿼리 실행 결과, 편지id를 리턴한다. 
+      return new Promise((resolve, reject) => {
+        mySQLQuery(selectPostcard(query)) 
+        .then((res) => { 
+          logger.warn(`엽서 1장 : ${res}`);
+          return resolve(res);
+        }) 
+        .catch((err) => {
+          logger.warn(`selectLetter() err: ${err} `);
+          return resolve(9999); 
+        });
+      }); 
   }
 }
 
@@ -105,7 +104,7 @@ letterMng.prototype.selectLetters = (query) => {
     // 쿼리: MEMBER_LETTER 테이블에서 이전에 강아지에게 보냈던 편지에 대한 정보를 조회한다.
     function selectLetters(query) {
         return {
-          text: `SELECT * FROM MEMBER_LETTER 
+          text: `SELECT *, DATE_FORMAT(date_detail, '%Y-%m-%d') AS date FROM MEMBER_LETTER
                  WHERE user_id = ?`, 
           params: [query] 
         };
@@ -134,7 +133,7 @@ letterMng.prototype.insertNewLetter = (query) => {
     function insertMember(query) {
       return {
         text: `INSERT INTO MEMBER_LETTER 
-                (user_id, dog_id, letter_content, dog_item, dog_location, member_name, date) 
+                (user_id, dog_id, letter_content, dog_item, dog_location, member_name, date_detail) 
                 VALUES (?, ?, ?, ?, ?, ?, NOW())`, 
         params: [query.user_id, query.dog_id, query.letter_content, query.dog_item, query.dog_location, query.member_name] 
       };
@@ -163,9 +162,9 @@ letterMng.prototype.insertNewPostcard = (query) => {
   function insertPostcard(query) {
     return {
       text: `INSERT INTO DOG_POSTCARD 
-              (postcard_id, user_id, dog_id, letter_content, img_path, date) 
-              VALUES (?, ?, ?, ?, ?, NOW())`, 
-      params: [query.postcard_id, query.user_id, query.dog_id, query.letter_content, query.img_path, query.date] 
+              (postcard_id, user_id, dog_id, letter_content, img_path, member_name, date_detail) 
+              VALUES (?, ?, ?, ?, ?, ?, NOW())`, 
+      params: [query.postcard_id, query.user_id, query.dog_id, query.letter_content, `${query.img_path}`, query.member_name] 
     };
   }
 
