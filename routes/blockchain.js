@@ -68,7 +68,7 @@ router.post('/wallet', async (req, res) => {
 router.post('/token', async (req, res) => {
 
 
-    const apiName = '블록체인 지갑주소 등록';
+    const apiName = '블록체인 토큰ID 등록';
     logger.info(`${apiName} API`);
     logger.info(`POST 바디: \n${JSON.stringify(req.body, null, 2)}`);
     logger.info(`user_id : ${req.body.user_id}`);
@@ -81,6 +81,7 @@ router.post('/token', async (req, res) => {
 
     // DB - insert문
     const result = await blockchainMngDB.updateTokenId(req.body);
+    logger.info(`result : ${result}`);
 
     // 응답코드 1005 : 빈값일때
     if (result == 1005) {
