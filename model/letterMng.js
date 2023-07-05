@@ -45,6 +45,34 @@ function mySQLQuery(query) {
 };
 
 
+
+// 엽서 DELETE
+letterMng.prototype.deletePostcard = (query) => {
+    
+  function deletePostcard(query) {
+    return {
+      text: `DELETE FROM rainbowbridge.DOG_POSTCARD WHERE postcard_id = ?`, 
+      params: [query] 
+    };
+  }
+
+  return new Promise((resolve, reject) => {
+      mySQLQuery(deletePostcard(query)) 
+      .then((res) => { 
+        logger.info(`res : ${res}`);
+        logger.info(`삭제한 엽서 id : ${postcard_id}`);
+        return resolve(0); // res.insert_id : insert한 row의 id를 얻는다.
+      })
+      .catch((err) => {
+        logger.warn(`insertNewLetter() err: ${err} `);
+      return resolve(9999); 
+      });
+  }); 
+  
+}
+
+
+
 //DB에 작성한 엽서 SELECT
 letterMng.prototype.selectPostcards = (query) => {
     

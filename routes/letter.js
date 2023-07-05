@@ -52,6 +52,38 @@ router.get('/test', async (req, res) => {
 
 
 /**
+ * 엽서 삭제
+ * @route {DELETE} api/letter/postcard
+ */
+router.delete('/postcard/:postcard_id?', async (req, res) => {
+  const apiName = '엽서 삭제';
+  const postcard_id = req.params.postcard_id;
+  logger.info(`${apiName} API`);
+  logger.info(`DELETE 파라미터: \n${JSON.stringify(req.params, null, 2)}`);
+
+  if (!postcard_id) {
+    return resCode.returnResponseCode(res, 1002, apiName, null, null);
+  }
+  
+  // DB - delete문  
+  const result = await letterMngDB.deletePostcard(postcard_id); // 엽서를 삭제한다. 
+  logger.info(`selectLetter() 리턴값: \n${JSON.stringify(result, null, 2)}`);
+
+  // 응답코드 0000 : 성공
+  if (result != null && result != undefined) {
+      return resCode.returnResponseCode(res, 0, apiName, null, null);
+      
+  // 응답코드 9999 : 기타 에러 코드
+  } else {
+      return resCode.returnResponseCode(res, 9999, apiName, null, null);
+  }
+
+  // 1005 추가해야함
+})
+
+
+
+/**
  * 편지조회 API 
  * @route {GET} api/letter/readLetter/:user_id
  * 
