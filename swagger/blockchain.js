@@ -52,7 +52,7 @@
  *                type: integer
  *                description: "사용자 id"
  *              token_id:
- *                type: string
+ *                type: integer
  *                description: "블록체인 토큰 id"
  *    responses:
  *      "200":
