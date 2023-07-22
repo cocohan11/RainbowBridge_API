@@ -169,7 +169,7 @@ router.post('/writeLetter', async (req, res) => {
     
     // 응답코드 0000 : 성공
     } else {
-        const plusResult = { letter_id: result }; // 원하는 출력 모양을 만듦
+      const plusResult = result // 원하는 출력 모양을 만듦
         return resCode.returnResponseCode(res, 0, apiName, "addToResult", plusResult);
     }
 })

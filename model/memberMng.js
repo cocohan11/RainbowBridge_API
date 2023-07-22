@@ -129,7 +129,7 @@ memberMng.prototype.selectMemberByEmail = async (s3, query) => {
   let user_id = 0;
   function selectMemberInfo(query) {
     return {
-      text: `SELECT * FROM MEMBER 
+      text: `SELECT * FROM MEMBER USE INDEX (idx_user_email, idx_mem_type)
              WHERE user_email = ? and mem_type = 'N'`, 
       params: [query] 
     };

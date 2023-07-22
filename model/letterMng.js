@@ -156,6 +156,9 @@ letterMng.prototype.selectLetters = (query) => {
 
 //DB에 작성한 편지 INSERT
 letterMng.prototype.insertNewLetter = (query) => {
+
+    // 변수
+  letter_id = 0;
     
     // 쿼리: MEMBER_LETTER 테이블에 강아지에게 보내는 편지에 대한 정보를 삽입한다.
     function insertMember(query) {
@@ -165,21 +168,37 @@ letterMng.prototype.insertNewLetter = (query) => {
                 VALUES (?, ?, ?, ?, ?, ?, NOW())`, 
         params: [query.user_id, query.dog_id, query.letter_content, query.dog_item, query.dog_location, query.member_name] 
       };
-    }
+  }
+  function selectDogFvUrl(query) {
+    return {
+      text: `SELECT fv_filepath
+              FROM DOG
+              WHERE dog_id = ?`, 
+      params: [query.dog_id] 
+    };
+  }
 
     // 쿼리 실행 결과, 편지id를 리턴한다. 
     return new Promise((resolve, reject) => {
         mySQLQuery(insertMember(query)) 
-        .then((res) => { 
-          logger.info(`편지id : ${res.insertId}`);
-          return resolve(res.insertId); // res.insert_id : insert한 row의 id를 얻는다.
+        .then((res1) => { 
+          logger.info(`편지id : ${res1.insertId}`);
+          letter_id = res1.insertId;
+          return mySQLQuery(selectDogFvUrl(query)); // res.insert_id : insert한 row의 id를 얻는다.
+        })
+          .then((res2) => { 
+          logger.warn(`fv_filepath: \n${res2[0].fv_filepath}`);
+          result = {
+            postcard_id: letter_id, // res.insert_id : insert한 row의 id를 얻는다.
+            imgUrl: res2[0].fv_filepath
+          }; 
+          return resolve(result); 
         })
         .catch((err) => {
           logger.warn(`insertNewLetter() err: ${err} `);
         return resolve(9999); 
         });
     }); 
-    
 }
 
 
