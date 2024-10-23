@@ -30,3 +30,7 @@ Thumbs.db
 *.flv
 *.mov
 *.wmv
+
+.env
+config/.env.production
+config/.env.development
